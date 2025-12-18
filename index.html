@@ -1,0 +1,3229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayurveda Herbs Traceability</title>
+    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/web/pdf.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .leaflet-container {
+            border-radius: 0.5rem;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s;
+            max-width: 400px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(400px);
+            }
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        /* Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 0.5rem;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Pulse Animation */
+        .pulse-ring {
+            animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulseRing {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            background-color: #1f2937;
+            color: white;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, visibility 0.3s;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Counter Animation */
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .count-up {
+            animation: countUp 0.5s ease-out;
+        }
+
+        /* Ripple Effect */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform 0.5s, opacity 1s;
+        }
+
+        .ripple:active::after {
+            transform: scale(0, 0);
+            opacity: 0.3;
+            transition: 0s;
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Slide In Animations */
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .slide-in-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(45deg, #10b981, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: gradient-shift 3s linear infinite;
+        }
+
+        @keyframes gradient-shift {
+            0% {
+                background-position: 0% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        /* Modal Animation */
+        .modal-overlay {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .modal-content {
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Badge Pulse */
+        .badge-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Copy Button Feedback */
+        .copy-success {
+            animation: copySuccess 0.3s ease-out;
+        }
+
+        @keyframes copySuccess {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 min-h-screen">
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[1000] space-y-2"></div>
+
+    <!-- Floating Action Menu -->
+    <div class="fixed bottom-20 right-4 z-50">
+        <button id="fab-menu-button" onclick="toggleFABMenu()"
+            class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover-lift flex items-center justify-center">
+            <svg id="fab-icon-plus" class="w-6 h-6 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                    clip-rule="evenodd" />
+            </svg>
+            <svg id="fab-icon-close" class="w-6 h-6 hidden transition-transform rotate-45" fill="currentColor"
+                viewBox="0 0 20 20">
+                <path fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                    clip-rule="evenodd" />
+            </svg>
+        </button>
+        <div id="fab-menu" class="hidden space-y-3 mb-3">
+            <button onclick="showSection('collect'); toggleFABMenu();"
+                class="w-12 h-12 bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover-lift flex items-center justify-center tooltip">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span class="tooltiptext">Quick Collect</span>
+            </button>
+            <button onclick="showSection('verify'); toggleFABMenu();"
+                class="w-12 h-12 bg-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover-lift flex items-center justify-center tooltip">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span class="tooltiptext">Quick Verify</span>
+            </button>
+            <button onclick="connectWallet(); toggleFABMenu();"
+                class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover-lift flex items-center justify-center tooltip">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                    <path fill-rule="evenodd"
+                        d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span class="tooltiptext">Connect Wallet</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle -->
+    <button id="dark-mode-toggle"
+        class="fixed bottom-4 right-4 z-50 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover-lift"
+        onclick="toggleDarkMode()">
+        <svg id="sun-icon" class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                clip-rule="evenodd" />
+        </svg>
+        <svg id="moon-icon" class="w-6 h-6 text-indigo-600 hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+        </svg>
+    </button>
+
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-sm border-b border-green-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Ayurveda Trace</h1>
+                        <p class="text-sm text-gray-600">Blockchain-powered herb verification</p>
+                    </div>
+                </div>
+                <div id="wallet-status"
+                    class="flex items-center space-x-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+                    <div id="status-dot" class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span id="wallet-address" class="text-sm font-mono text-gray-600">Not Connected</span>
+                </div>
+
+                <a href="documentation.html"
+                    class="flex items-center space-x-2 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <span class="font-medium">Documentation</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Main Menu -->
+        <div id="main-menu" class="section active">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Herb Supply Chain Management</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    Track Ayurvedic herbs from farm to consumer using blockchain technology for complete transparency
+                    and authenticity.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Collection Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover-lift cursor-pointer"
+                    onclick="showRoleLogin('collector')">
+                    <div class="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                        <svg class="w-8 h-8 text-blue" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Collection</h3>
+                    <p class="text-gray-600 text-center mb-4">Record herb collection details with GPS coordinates and
+                        environmental data</p>
+                    <button
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                        Collector Login
+                    </button>
+                </div>
+
+                <!-- Processing Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover-lift cursor-pointer"
+                    onclick="showRoleLogin('processor')">
+                    <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                        <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Processing</h3>
+                    <p class="text-gray-600 text-center mb-4">Document processing methods and equipment used with
+                        compliance verification</p>
+                    <button
+                        class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                        Processor Login
+                    </button>
+                </div>
+
+                <!-- Testing Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover-lift cursor-pointer"
+                    onclick="showRoleLogin('tester')">
+                    <div class="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                        <svg class="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Testing</h3>
+                    <p class="text-gray-600 text-center mb-4">Record laboratory testing results and quality assurance
+                        certificates</p>
+                    <button
+                        class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+                        Tester Login
+                    </button>
+                </div>
+
+                <!-- Packaging Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover-lift cursor-pointer"
+                    onclick="showRoleLogin('packager')">
+                    <div class="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                        <svg class="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Packaging</h3>
+                    <p class="text-gray-600 text-center mb-4">Package products and generate unique QR codes for consumer
+                        verification</p>
+                    <button
+                        class="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors">
+                        Packager Login
+                    </button>
+                </div>
+
+                <!-- Verification Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover-lift cursor-pointer"
+                    onclick="showSection('verify')">
+                    <div class="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                        <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Verification</h3>
+                    <p class="text-gray-600 text-center mb-4">Verify product authenticity and trace complete supply
+                        chain journey</p>
+                    <button
+                        class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                        Verify Product
+                    </button>
+                </div>
+
+                <!-- Admin Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover-lift cursor-pointer"
+                    onclick="showAdminLogin()">
+                    <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                        <svg class="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 text-center mb-2">Admin</h3>
+                    <p class="text-gray-600 text-center mb-4">Analytics dashboard and system administration</p>
+                    <button
+                        class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
+                        Admin Panel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Supply Chain Progress Stepper -->
+            <div class="mt-16 bg-white rounded-xl shadow-lg border border-gray-100 p-8 fade-in">
+                <h3 class="text-2xl font-bold text-gray-900 text-center mb-8">Supply Chain Journey</h3>
+                <div class="flex items-center justify-between max-w-4xl mx-auto">
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div
+                            class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110">
+                            <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">Collection</span>
+                        <span class="text-xs text-gray-500 mt-1">Farm Origin</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-gradient-to-r from-green-500 to-blue-500 mx-2"></div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div
+                            class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110">
+                            <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">Processing</span>
+                        <span class="text-xs text-gray-500 mt-1">Manufacturing</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-2"></div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div
+                            class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110">
+                            <svg class="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">Testing</span>
+                        <span class="text-xs text-gray-500 mt-1">Quality Check</span>
+                    </div>
+                    <div class="flex-1 h-1 bg-gradient-to-r from-purple-500 to-orange-500 mx-2"></div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div
+                            class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110">
+                            <svg class="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-semibold text-gray-700">Packaging</span>
+                        <span class="text-xs text-gray-500 mt-1">Final Product</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Statistics Dashboard -->
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6 slide-in-left">
+                <div
+                    class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white hover-lift">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold bg-white/20 px-2 py-1 rounded-full">+12%</span>
+                    </div>
+                    <h4 class="text-3xl font-bold mb-1 count-up" id="dashboard-total">0</h4>
+                    <p class="text-green-100 text-sm">Total Batches</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white hover-lift">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold bg-white/20 px-2 py-1 rounded-full">+8%</span>
+                    </div>
+                    <h4 class="text-3xl font-bold mb-1 count-up" id="dashboard-verified">0</h4>
+                    <p class="text-blue-100 text-sm">Verified Products</p>
+                </div>
+
+                <div
+                    class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white hover-lift">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                <path fill-rule="evenodd"
+                                    d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold bg-white/20 px-2 py-1 rounded-full">100%</span>
+                    </div>
+                    <h4 class="text-3xl font-bold mb-1 count-up" id="dashboard-tested">0</h4>
+                    <p class="text-purple-100 text-sm">Quality Tests</p>
+                </div>
+
+                <div
+                    class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white hover-lift">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-semibold bg-white/20 px-2 py-1 rounded-full">Active</span>
+                    </div>
+                    <h4 class="text-3xl font-bold mb-1 count-up" id="dashboard-users">5</h4>
+                    <p class="text-orange-100 text-sm">Active Users</p>
+                </div>
+            </div>
+
+            <!-- FAQ Accordion Section -->
+            <div class="mt-16 bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+                <h3 class="text-2xl font-bold text-gray-900 text-center mb-8">Frequently Asked Questions</h3>
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button onclick="toggleFAQ(1)"
+                            class="w-full text-left px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between">
+                            <span class="font-semibold text-gray-900">How does blockchain ensure product
+                                authenticity?</span>
+                            <svg id="faq-icon-1" class="w-5 h-5 text-gray-600 transition-transform" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div id="faq-content-1" class="hidden px-6 py-4 bg-white">
+                            <p class="text-gray-600">Blockchain technology creates an immutable record of every step in
+                                the supply chain. Each transaction is cryptographically secured and cannot be altered,
+                                ensuring complete transparency and authenticity from farm to consumer.</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button onclick="toggleFAQ(2)"
+                            class="w-full text-left px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between">
+                            <span class="font-semibold text-gray-900">What information is tracked for each herb
+                                batch?</span>
+                            <svg id="faq-icon-2" class="w-5 h-5 text-gray-600 transition-transform" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div id="faq-content-2" class="hidden px-6 py-4 bg-white">
+                            <p class="text-gray-600">We track GPS coordinates, soil conditions, weather data, processing
+                                methods, laboratory test results, quality certificates, packaging details, and
+                                timestamps for each stage of the supply chain.</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button onclick="toggleFAQ(3)"
+                            class="w-full text-left px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between">
+                            <span class="font-semibold text-gray-900">How can consumers verify their products?</span>
+                            <svg id="faq-icon-3" class="w-5 h-5 text-gray-600 transition-transform" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div id="faq-content-3" class="hidden px-6 py-4 bg-white">
+                            <p class="text-gray-600">Consumers can simply scan the QR code on the product packaging to
+                                access the complete supply chain journey, including origin, processing details, test
+                                results, and timestamps.</p>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <button onclick="toggleFAQ(4)"
+                            class="w-full text-left px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between">
+                            <span class="font-semibold text-gray-900">Is the system secure and tamper-proof?</span>
+                            <svg id="faq-icon-4" class="w-5 h-5 text-gray-600 transition-transform" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div id="faq-content-4" class="hidden px-6 py-4 bg-white">
+                            <p class="text-gray-600">Yes! Blockchain technology makes the data immutable and
+                                transparent. Once information is recorded, it cannot be altered or deleted, ensuring the
+                                highest level of security and trust.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Login Modal -->
+        <div id="role-login-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 max-w-md w-full mx-4">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4" id="role-login-title">Role Login</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                        <input type="text" id="role-username"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="role-password"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter password">
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="authenticateRole()"
+                            class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                            Login
+                        </button>
+                        <button onclick="closeRoleLogin()"
+                            class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Login Modal -->
+        <div id="admin-login-modal"
+            class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6 max-w-md w-full mx-4">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Admin Login</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Admin Username</label>
+                        <input type="text" id="admin-username"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                            placeholder="Enter admin username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Admin Password</label>
+                        <input type="password" id="admin-password"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                            placeholder="Enter admin password">
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="authenticateAdmin()"
+                            class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
+                            Login
+                        </button>
+                        <button onclick="closeAdminLogin()"
+                            class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection Section -->
+        <div id="collect" class="section hidden">
+            <div class="mb-6">
+                <button onclick="showSection('main-menu')"
+                    class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back to Menu
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Herb Collection
+                    </h2>
+                    <p class="text-green-100 mt-1">Record the initial collection of Ayurvedic herbs with complete
+                        traceability</p>
+                </div>
+
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Herb Name</label>
+                            <select id="herb-name"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                <option value="">Select an herb</option>
+                                <option value="Ashwagandha">Ashwagandha (Withania somnifera)</option>
+                                <option value="Turmeric">Turmeric (Curcuma longa)</option>
+                                <option value="Neem">Neem (Azadirachta indica)</option>
+                                <option value="Brahmi">Brahmi (Bacopa monnieri)</option>
+                                <option value="Tulsi">Tulsi (Ocimum sanctum)</option>
+                                <option value="Amla">Amla (Phyllanthus emblica)</option>
+                                <option value="Guduchi">Guduchi (Tinospora cordifolia)</option>
+                                <option value="Haritaki">Haritaki (Terminalia chebula)</option>
+                                <option value="Bibhitaki">Bibhitaki (Terminalia bellirica)</option>
+                                <option value="Amalaki">Amalaki (Emblica officinalis)</option>
+                                <option value="Shatavari">Shatavari (Asparagus racemosus)</option>
+                                <option value="Guggul">Guggul (Commiphora wightii)</option>
+                                <option value="Arjuna">Arjuna (Terminalia arjuna)</option>
+                                <option value="Manjistha">Manjistha (Rubia cordifolia)</option>
+                                <option value="Ashoka">Ashoka (Saraca asoca)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Scientific Name</label>
+                            <input type="text" id="scientific-name"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="Scientific name" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Collection Location
+                        </label>
+                        <input type="text" id="collection-location"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
+                            placeholder="GPS coordinates (auto-detected)" readonly>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity (kg)</label>
+                            <input type="number" id="quantity"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="0" min="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Soil Type</label>
+                            <input type="text" id="soil-type"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="e.g., Loamy">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Weather Conditions</label>
+                            <input type="text" id="weather-conditions"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="e.g., Sunny, 25°C">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button id="collect-btn" onclick="collectHerb()"
+                            class="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <span id="collect-btn-text">Collect Herb</span>
+                            <svg id="collect-spinner" class="w-5 h-5 ml-2 spinner hidden" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button id="update-btn" onclick="updateCollectionDetails()"
+                            class="flex-1 bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                            <span id="update-btn-text">Update Details</span>
+                            <svg id="update-spinner" class="w-5 h-5 ml-2 spinner hidden" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="collect-result" class="hidden mt-6 p-4 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Section -->
+        <div id="process" class="section hidden">
+            <div class="mb-6">
+                <button onclick="showSection('main-menu')"
+                    class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back to Menu
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Processing Information
+                    </h2>
+                    <p class="text-blue-100 mt-1">Document processing methods and ensure compliance with standards</p>
+                </div>
+
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Batch ID</label>
+                        <input type="number" id="process-batch-id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter batch ID" min="1">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Processing Details</label>
+                        <textarea id="processing-details-input" rows="4"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            placeholder="e.g., Dried at 40°C for 2 hours, cleaned and sorted"></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Equipment Used</label>
+                        <input type="text" id="equipment-used"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., Convection Dryer, Sorting Machine">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Processing Compliance Document
+                        </label>
+                        <div class="flex gap-4 mb-3">
+                            <input type="file" id="processing-compliance-file" accept=".pdf,.txt"
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <button
+                                onclick="generateAndSetHash('processing-compliance-file', 'processing-compliance-hash')"
+                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                Generate Hash
+                            </button>
+                        </div>
+                        <input type="text" id="processing-compliance-hash"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                            placeholder="Compliance hash will appear here" readonly>
+                    </div>
+
+                    <button id="process-btn" onclick="addProcessing()"
+                        class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span id="process-btn-text">Add Processing</span>
+                        <svg id="process-spinner" class="w-5 h-5 ml-2 spinner hidden" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <div id="process-result" class="hidden mt-6 p-4 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testing Section -->
+        <div id="test" class="section hidden">
+            <div class="mb-6">
+                <button onclick="showSection('main-menu')"
+                    class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back to Menu
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Testing Results
+                    </h2>
+                    <p class="text-purple-100 mt-1">Record laboratory testing results and quality assurance data</p>
+                </div>
+
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Batch ID</label>
+                        <input type="number" id="test-batch-id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="Enter batch ID" min="1">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Testing Results</label>
+                        <textarea id="testing-results" rows="4"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="e.g., Purity: 98%, Heavy metals: Within limits, Microbiology: Passed"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Test Lab</label>
+                            <input type="text" id="test-lab"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="e.g., HerbalLabs Inc.">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Test Method</label>
+                            <input type="text" id="test-method"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                placeholder="e.g., HPLC, GC-MS">
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Testing Compliance Certificate
+                        </label>
+                        <div class="flex gap-4 mb-3">
+                            <input type="file" id="testing-compliance-file" accept=".pdf,.txt"
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <button onclick="generateAndSetHash('testing-compliance-file', 'testing-compliance-hash')"
+                                class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                                Generate Hash
+                            </button>
+                        </div>
+                        <input type="text" id="testing-compliance-hash"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                            placeholder="Compliance hash will appear here" readonly>
+                    </div>
+
+                    <button id="test-btn" onclick="addTesting()"
+                        class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span id="test-btn-text">Add Testing</span>
+                        <svg id="test-spinner" class="w-5 h-5 ml-2 spinner hidden" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <div id="test-result" class="hidden mt-6 p-4 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Packaging Section -->
+        <div id="package" class="section hidden">
+            <div class="mb-6">
+                <button onclick="showSection('main-menu')"
+                    class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back to Menu
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Packaging
+                    </h2>
+                    <p class="text-orange-100 mt-1">Package products and generate unique QR codes for consumer
+                        verification</p>
+                </div>
+
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Batch ID</label>
+                        <input type="number" id="package-batch-id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            placeholder="Enter batch ID" min="1">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Packaging Location
+                        </label>
+                        <input type="text" id="packaging-location"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50"
+                            placeholder="GPS coordinates (auto-detected)" readonly>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Package Type</label>
+                            <input type="text" id="package-type"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                placeholder="e.g., Vacuum-sealed, Glass bottle">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Batch Weight (kg)</label>
+                            <input type="number" id="batch-weight"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                placeholder="0" min="1">
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Packaging Compliance Document
+                        </label>
+                        <div class="flex gap-4 mb-3">
+                            <input type="file" id="packaging-compliance-file" accept=".pdf,.txt"
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            <button
+                                onclick="generateAndSetHash('packaging-compliance-file', 'packaging-compliance-hash')"
+                                class="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+                                Generate Hash
+                            </button>
+                        </div>
+                        <input type="text" id="packaging-compliance-hash"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                            placeholder="Compliance hash will appear here" readonly>
+                    </div>
+
+                    <button id="package-btn" onclick="packageBatch()"
+                        class="w-full bg-orange-600 text-white py-3 px-6 rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span id="package-btn-text">Package Batch</span>
+                        <svg id="package-spinner" class="w-5 h-5 ml-2 spinner hidden" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <div id="package-result" class="hidden mt-6 p-4 rounded-lg"></div>
+
+                    <div id="qrcode" class="hidden mt-6 p-6 bg-gray-50 rounded-lg text-center">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Generated QR Code</h3>
+                        <div class="bg-white p-4 rounded-lg inline-block shadow-md">
+                            <canvas id="qr-canvas"></canvas>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-4 font-mono" id="qr-code-text"></p>
+                        <button onclick="downloadQR()"
+                            class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            Download QR Code
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Section -->
+        <div id="verify" class="section hidden">
+            <div class="mb-6">
+                <button onclick="showSection('main-menu')"
+                    class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back to Menu
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Product Verification
+                    </h2>
+                    <p class="text-red-100 mt-1">Verify product authenticity and trace complete supply chain journey</p>
+                </div>
+
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2V5h1v1H5zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm2 2v-1h1v1H5zM13 3a1 1 0 00-1 1v3a1 1 0 001 1h3a1 1 0 001-1V4a1 1 0 00-1-1h-3zm1 2v1h1V5h-1z"
+                                    clip-rule="evenodd" />
+                                <path
+                                    d="M11 4a1 1 0 10-2 0v1a1 1 0 102 0V4zM10 7a1 1 0 011 1v1h2a1 1 0 110 2h-3a1 1 0 01-1-1V8a1 1 0 011-1zM16 9a1 1 0 100 2 1 1 0 000-2zM9 13a1 1 0 011-1v1h1a1 1 0 110 2v-1a1 1 0 00-1-1H9z" />
+                                <path fill-rule="evenodd"
+                                    d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Search by Batch ID or QR Code Hash
+                        </label>
+                        <div class="flex gap-4">
+                            <input type="text" id="qr-code"
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                placeholder="Enter batch ID (e.g., 1, 2, 3) or QR code hash">
+                            <button onclick="scanQR()"
+                                class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                Scan QR
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="qr-scanner-container" class="hidden mb-6">
+                        <video id="qr-scanner" class="w-full max-w-md mx-auto rounded-lg shadow-lg" autoplay
+                            muted></video>
+                        <button onclick="stopQRScan()"
+                            class="mt-4 bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                            Stop Scanning
+                        </button>
+                    </div>
+
+                    <button id="verify-btn" onclick="verifyJourney()"
+                        class="w-full bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <span id="verify-btn-text">Verify Journey</span>
+                        <svg id="verify-spinner" class="w-5 h-5 ml-2 spinner hidden" fill="currentColor"
+                            viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <div id="verify-result" class="hidden mt-6 p-4 rounded-lg"></div>
+
+                    <!-- Batch Journey Details -->
+                    <div id="journey-details" class="hidden mt-6 space-y-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-4">Batch Journey Details</h3>
+
+                        <!-- Collection Information -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                            <h4 class="text-lg font-semibold text-green-800 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                Collection Information
+                            </h4>
+                            <div id="collection-details" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"></div>
+                        </div>
+
+                        <!-- Processing Information -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h4 class="text-lg font-semibold text-blue-800 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                Processing Information
+                            </h4>
+                            <div id="processing-details" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"></div>
+                        </div>
+
+                        <!-- Testing Information -->
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                            <h4 class="text-lg font-semibold text-purple-800 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                Testing Information
+                            </h4>
+                            <div id="testing-details" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"></div>
+                        </div>
+
+                        <!-- Packaging Information -->
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                            <h4 class="text-lg font-semibold text-orange-800 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                Packaging Information
+                            </h4>
+                            <div id="packaging-details" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"></div>
+                        </div>
+
+                        <!-- Compliance Documents -->
+                        <div id="compliance-documents" class="space-y-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Compliance Documents</h3>
+                            <div id="document-viewers" class="grid grid-cols-1 lg:grid-cols-3 gap-4"></div>
+                        </div>
+
+                        <!-- Map -->
+                        <div id="map-container" class="hidden">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Supply Chain Locations</h3>
+                            <div id="map" class="h-96 rounded-lg shadow-md"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="admin" class="section hidden">
+            <div class="mb-6">
+                <button onclick="showSection('main-menu')"
+                    class="flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Back to Menu
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-gray-700 to-gray-900 px-6 py-4">
+                    <h2 class="text-2xl font-bold text-white flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Admin Panel
+                    </h2>
+                    <p class="text-gray-300 mt-1">Analytics dashboard and system administration</p>
+                </div>
+
+                <div class="p-6">
+                    <!-- Admin Dashboard -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Blockchain Data Analysis</h3>
+
+                        <!-- Summary Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-green-800">Total Batches</h4>
+                                <p class="text-2xl font-bold text-green-600" id="total-batches">0</p>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-blue-800">Processed Batches</h4>
+                                <p class="text-2xl font-bold text-blue-600" id="processed-batches">0</p>
+                            </div>
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-purple-800">Tested Batches</h4>
+                                <p class="text-2xl font-bold text-purple-600" id="tested-batches">0</p>
+                            </div>
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <h4 class="text-sm font-medium text-orange-800">Packaged Batches</h4>
+                                <p class="text-2xl font-bold text-orange-600" id="packaged-batches">0</p>
+                            </div>
+                        </div>
+                        <!-- Charts -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-4">Herb Distribution</h4>
+                                <div class="chart-container">
+                                    <canvas id="herb-distribution-chart"></canvas>
+                                </div>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-4">Supply Chain Progress</h4>
+                                <div class="chart-container">
+                                    <canvas id="supply-chain-progress-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Refresh Button -->
+                        <div class="flex justify-center mb-6">
+                            <button onclick="loadAdminData()"
+                                class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                                Refresh Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- User Management -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">User Management</h3>
+
+                        <!-- Add User Form -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                <input type="text" id="new-username"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                                    placeholder="Enter username">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                <input type="password" id="new-password"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+                                    placeholder="Enter password">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                                <select id="new-role"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent">
+                                    <option value="">Select role</option>
+                                    <option value="collector">Collector</option>
+                                    <option value="processor">Processor</option>
+                                    <option value="tester">Tester</option>
+                                    <option value="packager">Packager</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="addUser()"
+                            class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                            Add User
+                        </button>
+                    </div>
+
+                    <!-- User List -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Current Users</h3>
+                            <button onclick="loadUsers()"
+                                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                Refresh Users
+                            </button>
+                        </div>
+                        <div id="user-list" class="space-y-3 max-h-96 overflow-y-auto">
+                            <!-- Users will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-gray-600">© 2025 Ayurveda Farm2Pharma. Powered by blockchain technology for authentic
+                    Ayurvedic
+                    products.</p>
+                <p class="text-sm text-gray-500 mt-2">Ensuring transparency, quality, and sustainability in traditional
+                    medicine supply chains.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let provider, signer, contract;
+        let map, collectionMarker, packagingMarker;
+        let video, canvas, qrScannerInterval;
+        let isConnected = false;
+        let walletAddress = '';
+        let currentQRCode = '';
+        let currentUser = null;
+        let currentRole = null;
+        let herbDistributionChart = null;
+        let supplyChainProgressChart = null;
+
+        let contractAddress, PINATA_JWT, SEPOLIA_CHAIN_ID, RPC_URL;
+
+        async function loadEnv() {
+            try {
+                const response = await fetch('env.json');
+                if (!response.ok) throw new Error('Failed to load env.json');
+                const env = await response.json();
+                contractAddress = env.CONTRACT_ADDRESS;
+                PINATA_JWT = env.PINATA_JWT;
+                SEPOLIA_CHAIN_ID = env.SEPOLIA_CHAIN_ID || "11155111";
+                RPC_URL = env.RPC_URL;
+            } catch (error) {
+                console.error("Configuration error:", error);
+            }
+        }
+
+        const HARDCODED_USERS = [
+            { username: "admin", password: "admin123", role: "admin" },
+            { username: "collector1", password: "collect123", role: "collector" },
+            { username: "processor1", password: "process123", role: "processor" },
+            { username: "tester1", password: "test123", role: "tester" },
+            { username: "packager1", password: "package123", role: "packager" }
+        ];
+
+        function initializeUsers() {
+            if (!localStorage.getItem('hardcodedUsers')) {
+                localStorage.setItem('hardcodedUsers', JSON.stringify(HARDCODED_USERS));
+            }
+        }
+
+        function getUsers() {
+            const users = localStorage.getItem('hardcodedUsers');
+            return users ? JSON.parse(users) : HARDCODED_USERS;
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('hardcodedUsers', JSON.stringify(users));
+        }
+
+        const contractABI = [
+            {
+                "inputs": [
+                    { "type": "string", "name": "herbName" },
+                    { "type": "string", "name": "scientificName" },
+                    { "type": "string", "name": "location" },
+                    { "type": "uint256", "name": "quantity" }
+                ],
+                "name": "createBatch",
+                "outputs": [{ "type": "uint256", "name": "" }],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "type": "uint256", "name": "batchId" },
+                    { "type": "string", "name": "soilType" },
+                    { "type": "string", "name": "weatherConditions" }
+                ],
+                "name": "updateCollectionDetails",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "type": "uint256", "name": "batchId" },
+                    { "type": "string", "name": "details" },
+                    { "type": "string", "name": "equipmentUsed" },
+                    { "type": "string", "name": "complianceHash" }
+                ],
+                "name": "addProcessing",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "type": "uint256", "name": "batchId" },
+                    { "type": "string", "name": "results" },
+                    { "type": "string", "name": "testLab" },
+                    { "type": "string", "name": "testMethod" },
+                    { "type": "string", "name": "complianceHash" }
+                ],
+                "name": "addTesting",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    { "type": "uint256", "name": "batchId" },
+                    { "type": "string", "name": "location" },
+                    { "type": "string", "name": "packageType" },
+                    { "type": "uint256", "name": "batchWeight" },
+                    { "type": "string", "name": "complianceHash" }
+                ],
+                "name": "packageBatch",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [{ "type": "uint256", "name": "batchId" }],
+                "name": "getBatchJourney",
+                "outputs": [
+                    {
+                        "type": "tuple",
+                        "components": [
+                            { "type": "uint256", "name": "batchId" },
+                            { "type": "address", "name": "collector" },
+                            {
+                                "type": "tuple",
+                                "name": "collection",
+                                "components": [
+                                    { "type": "string", "name": "herbName" },
+                                    { "type": "string", "name": "scientificName" },
+                                    { "type": "string", "name": "location" },
+                                    { "type": "uint256", "name": "quantity" },
+                                    { "type": "string", "name": "soilType" },
+                                    { "type": "string", "name": "weatherConditions" },
+                                    { "type": "uint256", "name": "collectionTime" }
+                                ]
+                            },
+                            {
+                                "type": "tuple",
+                                "name": "processing",
+                                "components": [
+                                    { "type": "string", "name": "details" },
+                                    { "type": "string", "name": "equipmentUsed" },
+                                    { "type": "string", "name": "complianceHash" }
+                                ]
+                            },
+                            {
+                                "type": "tuple",
+                                "name": "testing",
+                                "components": [
+                                    { "type": "string", "name": "results" },
+                                    { "type": "string", "name": "testLab" },
+                                    { "type": "string", "name": "testMethod" },
+                                    { "type": "string", "name": "complianceHash" }
+                                ]
+                            },
+                            {
+                                "type": "tuple",
+                                "name": "packaging",
+                                "components": [
+                                    { "type": "string", "name": "location" },
+                                    { "type": "string", "name": "packageType" },
+                                    { "type": "uint256", "name": "batchWeight" },
+                                    { "type": "string", "name": "complianceHash" },
+                                    { "type": "string", "name": "qrCodeHash" },
+                                    { "type": "uint256", "name": "packagingTime" }
+                                ]
+                            },
+                            { "type": "bool", "name": "isActive" }
+                        ]
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{ "type": "string", "name": "qrCodeHash" }],
+                "name": "getBatchByQR",
+                "outputs": [{ "type": "uint256", "name": "" }],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "nextBatchId",
+                "outputs": [{ "type": "uint256", "name": "" }],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        window.addEventListener('load', async () => {
+            await loadEnv();
+            initializeUsers();
+            await connectWallet();
+            getCurrentLocation();
+            updateButtonStates();
+
+            if (window.ethereum) {
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                window.ethereum.on('chainChanged', handleChainChanged);
+            }
+        });
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const location = `${position.coords.latitude}:${position.coords.longitude}`;
+                        document.getElementById('collection-location').value = location;
+                        document.getElementById('packaging-location').value = location;
+                    },
+                    (error) => {
+                        console.error("Geolocation error:", error);
+                    }
+                );
+            }
+        }
+
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                setConnectionStatus(false, '');
+            } else {
+                connectWallet();
+            }
+        }
+
+        function handleChainChanged(chainId) {
+            if (chainId !== `0x${parseInt(SEPOLIA_CHAIN_ID).toString(16)}`) {
+                setConnectionStatus(false, '');
+            }
+        }
+
+        function setConnectionStatus(connected, address) {
+            isConnected = connected;
+            walletAddress = address;
+
+            const statusDot = document.getElementById('status-dot');
+            const walletAddressEl = document.getElementById('wallet-address');
+
+            if (connected) {
+                if (address === 'Read-Only Mode') {
+                    statusDot.className = 'w-3 h-3 bg-blue-500 rounded-full pulse-ring';
+                    walletAddressEl.textContent = 'Read-Only Mode';
+                } else if (address === 'Demo Mode') {
+                    statusDot.className = 'w-3 h-3 bg-yellow-500 rounded-full';
+                    walletAddressEl.textContent = 'Demo Mode';
+                } else {
+                    statusDot.className = 'w-3 h-3 bg-green-500 rounded-full';
+                    walletAddressEl.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+                }
+            } else {
+                statusDot.className = 'w-3 h-3 bg-red-500 rounded-full';
+                walletAddressEl.textContent = 'Not Connected';
+            }
+
+            updateButtonStates();
+        }
+
+        function updateButtonStates() {
+            const actionButtons = [
+                'collect-btn', 'update-btn', 'process-btn', 'test-btn', 'package-btn', 'verify-btn'
+            ];
+
+            actionButtons.forEach(buttonId => {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    const shouldBeEnabled = isConnected || (currentUser && currentRole);
+                    button.disabled = !shouldBeEnabled;
+                }
+            });
+        }
+
+        function checkWriteAuth() {
+            if (walletAddress === 'Read-Only Mode') {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (isMobile) {
+                    if (confirm("You are in Read-Only Mode. To add data, you need to connect your mobile wallet (MetaMask, Trust, etc.). Would you like to connect now?")) {
+                        connectWallet();
+                    }
+                } else {
+                    alert("You are in Read-Only Mode. To add data to the blockchain, please install the MetaMask extension and refresh the page.");
+                    window.open('https://metamask.io/download/', '_blank');
+                }
+                return false;
+            }
+            if (walletAddress === 'Demo Mode') {
+                showToast("Note: You are in Demo Mode. Data will not be saved to the blockchain.", "warning");
+                return true;
+            }
+            if (!isConnected && !currentUser) {
+                alert("Please connect your wallet or login first!");
+                return false;
+            }
+            return true;
+        }
+
+        async function connectWallet() {
+            // 1. Check for Injected Provider (MetaMask extension or DApp Browser)
+            if (window.ethereum) {
+                try {
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const network = await provider.getNetwork();
+
+                    if (network.chainId.toString() !== SEPOLIA_CHAIN_ID) {
+                        try {
+                            await window.ethereum.request({
+                                method: "wallet_switchEthereumChain",
+                                params: [{ chainId: `0x${parseInt(SEPOLIA_CHAIN_ID).toString(16)}` }],
+                            });
+                        } catch (switchError) {
+                            console.log("Switch rejected, using read-only mode");
+                        }
+                    }
+
+                    await provider.send("eth_requestAccounts", []);
+                    signer = provider.getSigner();
+                    const address = await signer.getAddress();
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    setConnectionStatus(true, address);
+                    return true;
+                } catch (error) {
+                    console.error("Injected wallet connection failed:", error);
+                }
+            }
+
+            // 2. Fallback to WalletConnect for Mobile/Non-Injected users
+            if (typeof WalletConnectProvider !== 'undefined') {
+                try {
+                    const wcProvider = new WalletConnectProvider.default({
+                        rpc: {
+                            [parseInt(SEPOLIA_CHAIN_ID)]: RPC_URL
+                        }
+                    });
+
+                    await wcProvider.enable();
+                    provider = new ethers.providers.Web3Provider(wcProvider);
+                    signer = provider.getSigner();
+                    const address = await signer.getAddress();
+                    contract = new ethers.Contract(contractAddress, contractABI, signer);
+                    setConnectionStatus(true, address);
+                    return true;
+                } catch (error) {
+                    console.log("WalletConnect rejected or failed");
+                }
+            }
+
+            // 3. Last Resort: Read-Only Mode (using Public RPC)
+            if (RPC_URL) {
+                try {
+                    provider = new ethers.providers.SimpleRpcProvider(RPC_URL);
+                    contract = new ethers.Contract(contractAddress, contractABI, provider);
+                    setConnectionStatus(true, 'Read-Only Mode');
+                    console.log("Using Public RPC for read-only access");
+                    return true;
+                } catch (error) {
+                    console.error("Public RPC fallback failed:", error);
+                }
+            }
+
+            setConnectionStatus(true, 'Demo Mode');
+            return true;
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+                section.classList.remove('active');
+            });
+
+            const targetSection = document.getElementById(sectionId);
+            targetSection.classList.remove('hidden');
+            targetSection.classList.add('active', 'fade-in');
+
+            if (sectionId !== 'verify' && map) {
+                map.remove();
+                map = null;
+            }
+
+            if (sectionId === 'admin') {
+                loadAdminData();
+                loadUsers();
+            }
+
+            updateButtonStates();
+        }
+
+        function showRoleLogin(role) {
+            currentRole = role;
+            document.getElementById('role-login-title').textContent = `${role.charAt(0).toUpperCase() + role.slice(1)} Login`;
+            document.getElementById('role-login-modal').classList.remove('hidden');
+            document.getElementById('role-login-modal').classList.add('flex');
+            document.getElementById('role-username').value = '';
+            document.getElementById('role-password').value = '';
+        }
+
+        function closeRoleLogin() {
+            document.getElementById('role-login-modal').classList.add('hidden');
+            document.getElementById('role-login-modal').classList.remove('flex');
+            currentRole = null;
+            updateButtonStates();
+        }
+
+        function showAdminLogin() {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+            document.getElementById('admin-login-modal').classList.add('flex');
+            document.getElementById('admin-username').value = '';
+            document.getElementById('admin-password').value = '';
+        }
+
+        function closeAdminLogin() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+            document.getElementById('admin-login-modal').classList.remove('flex');
+            updateButtonStates();
+        }
+
+        function logoutAdmin() {
+            currentUser = null;
+            currentRole = null;
+            updateButtonStates();
+            alert('Logged out successfully');
+            showSection('main-menu');
+        }
+
+        async function authenticateRole() {
+            const username = document.getElementById('role-username').value.trim();
+            const password = document.getElementById('role-password').value.trim();
+
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+
+            try {
+                const users = getUsers();
+                console.log('Available users:', users);
+                console.log('Current role:', currentRole);
+                console.log('Looking for user:', username, 'with role:', currentRole);
+
+                const user = users.find(u => u.username === username && u.password === password && u.role === currentRole);
+                console.log('Found user:', user);
+
+                if (user) {
+                    let targetSection = currentRole === 'collector' ? 'collect' :
+                        currentRole === 'processor' ? 'process' :
+                            currentRole === 'tester' ? 'test' :
+                                currentRole === 'packager' ? 'package' : 'main-menu';
+
+                    console.log('Target section:', targetSection);
+
+                    currentUser = username;
+                    console.log('Set currentUser to:', currentUser);
+
+                    const userRole = currentRole;
+                    console.log('Stored userRole:', userRole);
+
+                    closeRoleLogin();
+
+                    currentRole = userRole;
+                    console.log('Restored currentRole to:', currentRole);
+
+                    console.log('About to call showSection with:', targetSection);
+                    showSection(targetSection);
+                } else {
+                    alert('Invalid username, password, or role');
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                alert('Authentication failed. Please try again.');
+            }
+        }
+
+        async function authenticateAdmin() {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
+
+            if (!username || !password) {
+                alert('Please enter both admin username and password');
+                return;
+            }
+
+            try {
+                const users = getUsers();
+                const user = users.find(u => u.username === username && u.password === password && u.role === 'admin');
+
+                if (user) {
+                    currentUser = username;
+                    currentRole = 'admin';
+                    closeAdminLogin();
+                    showSection('admin');
+                } else {
+                    alert('Invalid admin username or password');
+                }
+            } catch (error) {
+                console.error('Error authenticating admin:', error);
+                alert('Failed to authenticate admin: ' + error.message);
+            }
+        }
+
+        async function addUser() {
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value.trim();
+            const role = document.getElementById('new-role').value;
+
+            if (!username || !password || !role) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            if (role === 'admin') {
+                alert("Cannot create additional admin users through this interface");
+                return;
+            }
+
+            try {
+                const users = getUsers();
+
+                if (users.some(u => u.username === username)) {
+                    alert('Username already exists');
+                    return;
+                }
+
+                users.push({ username, password, role });
+                saveUsers(users);
+
+                alert('User created successfully!');
+                document.getElementById('new-username').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('new-role').value = '';
+                loadUsers();
+            } catch (error) {
+                console.error('Error creating user:', error);
+                alert('Failed to create user: ' + error.message);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const users = getUsers();
+                displayUsers(users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('user-list').innerHTML = '<p class="text-red-500 text-center py-4">Error loading users: ' + error.message + '</p>';
+            }
+        }
+
+        function displayUsers(users) {
+            const userList = document.getElementById('user-list');
+
+            if (users.length === 0) {
+                userList.innerHTML = '<p class="text-gray-500 text-center py-4">No users found.</p>';
+                return;
+            }
+
+            userList.innerHTML = users.map(user => `
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                        <div class="font-medium text-gray-900">${user.username}</div>
+                        <div class="text-sm text-gray-600">Role: ${user.role}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${user.role !== 'admin' ? `
+                            <button onclick="deleteUser('${user.username}')" class="px-3 py-1 rounded text-sm bg-red-600 hover:bg-red-700 text-white">
+                                Delete
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteUser(username) {
+            if (!confirm(`Are you sure you want to delete user ${username}?`)) {
+                return;
+            }
+
+            try {
+                let users = getUsers();
+                users = users.filter(u => u.username !== username);
+                saveUsers(users);
+                loadUsers();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user: ' + error.message);
+            }
+        }
+
+        async function loadAdminData() {
+            if (!isConnected && !currentUser) {
+                console.log("Skipping admin data load - not connected and no user logged in");
+                return;
+            }
+
+            try {
+                // For demo mode, use sample data
+                if (!isConnected || walletAddress === 'Demo Mode') {
+                    // Update stats with sample data
+                    document.getElementById('total-batches').textContent = '12';
+                    document.getElementById('processed-batches').textContent = '10';
+                    document.getElementById('tested-batches').textContent = '8';
+                    document.getElementById('packaged-batches').textContent = '6';
+
+                    // Update charts with sample data
+                    updateHerbDistributionChart({
+                        'Ashwagandha': 3,
+                        'Turmeric': 2,
+                        'Neem': 2,
+                        'Brahmi': 1,
+                        'Tulsi': 1,
+                        'Amla': 1,
+                        'Guduchi': 1,
+                        'Other': 1
+                    });
+                    updateSupplyChainProgressChart(12, 10, 8, 6);
+                    return;
+                }
+
+                const nextBatchId = await contract.nextBatchId();
+                const totalBatches = nextBatchId.toNumber();
+
+                let processedBatches = 0;
+                let testedBatches = 0;
+                let packagedBatches = 0;
+                const herbCounts = {};
+
+                for (let i = 1; i < totalBatches; i++) {
+                    try {
+                        const batch = await contract.getBatchJourney(i);
+
+                        if (batch.collection.herbName) {
+                            herbCounts[batch.collection.herbName] = (herbCounts[batch.collection.herbName] || 0) + 1;
+                        }
+
+                        if (batch.processing.details) {
+                            processedBatches++;
+                        }
+
+                        if (batch.testing.results) {
+                            testedBatches++;
+                        }
+
+                        if (batch.packaging.qrCodeHash) {
+                            packagedBatches++;
+                        }
+                    } catch (error) {
+                        console.error(`Error analyzing batch ${i}:`, error);
+                    }
+                }
+
+                // Update stats
+                document.getElementById('total-batches').textContent = totalBatches - 1;
+                document.getElementById('processed-batches').textContent = processedBatches;
+                document.getElementById('tested-batches').textContent = testedBatches;
+                document.getElementById('packaged-batches').textContent = packagedBatches;
+
+                // Update charts
+                updateHerbDistributionChart(herbCounts);
+                updateSupplyChainProgressChart(totalBatches - 1, processedBatches, testedBatches, packagedBatches);
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+                alert('Failed to load admin data: ' + error.message);
+            }
+        }
+
+        function updateHerbDistributionChart(herbCounts) {
+            const ctx = document.getElementById('herb-distribution-chart').getContext('2d');
+
+            if (herbDistributionChart) {
+                herbDistributionChart.destroy();
+            }
+
+            const labels = Object.keys(herbCounts);
+            const data = Object.values(herbCounts);
+
+            herbDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444',
+                            '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSupplyChainProgressChart(totalBatches, processedBatches, testedBatches, packagedBatches) {
+            const ctx = document.getElementById('supply-chain-progress-chart').getContext('2d');
+
+            if (supplyChainProgressChart) {
+                supplyChainProgressChart.destroy();
+            }
+
+            supplyChainProgressChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Collected', 'Processed', 'Tested', 'Packaged'],
+                    datasets: [{
+                        label: 'Batches',
+                        data: [totalBatches, processedBatches, testedBatches, packagedBatches],
+                        backgroundColor: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: Math.max(totalBatches, 10),
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        async function generateComplianceHash(input) {
+            try {
+                let data;
+                if (input instanceof File) {
+                    const arrayBuffer = await input.arrayBuffer();
+                    data = new Uint8Array(arrayBuffer);
+                } else {
+                    data = new TextEncoder().encode(input);
+                }
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex;
+            } catch (error) {
+                console.error("Hash generation failed:", error);
+                return null;
+            }
+        }
+
+        async function generateAndSetHash(fileInputId, targetInputId) {
+            const fileInput = document.getElementById(fileInputId);
+            if (fileInput.files.length === 0) {
+                alert("Please select a file");
+                return;
+            }
+            const hash = await generateComplianceHash(fileInput.files[0]);
+            if (hash) {
+                document.getElementById(targetInputId).value = hash;
+                await uploadToIPFS(fileInput.files[0], hash);
+            } else {
+                alert("Failed to generate hash");
+            }
+        }
+
+        async function uploadToIPFS(file, hash) {
+            if (!PINATA_JWT) return null;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${PINATA_JWT}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.IpfsHash) {
+                    localStorage.setItem(hash, result.IpfsHash);
+                    return result.IpfsHash;
+                }
+            } catch (error) {
+                console.error("IPFS upload failed:", error);
+            }
+            return null;
+        }
+
+        function showLoading(buttonId, spinnerId, show) {
+            const button = document.getElementById(buttonId);
+            const spinner = document.getElementById(spinnerId);
+            const buttonText = document.getElementById(buttonId.replace('-btn', '-btn-text'));
+
+            if (show) {
+                spinner.classList.remove('hidden');
+                button.disabled = true;
+                if (buttonText) buttonText.textContent = 'Processing...';
+            } else {
+                spinner.classList.add('hidden');
+                const shouldBeEnabled = isConnected || (currentUser && currentRole);
+                button.disabled = !shouldBeEnabled;
+                if (buttonText) buttonText.textContent = buttonText.textContent.replace('Processing...', '');
+            }
+        }
+
+        function showAlert(section, message, type = 'info') {
+            const alertEl = document.getElementById(`${section}-result`);
+            alertEl.className = `mt-6 p-4 rounded-lg ${getAlertClass(type)}`;
+            alertEl.textContent = message;
+            alertEl.classList.remove('hidden');
+        }
+
+        function getAlertClass(type) {
+            switch (type) {
+                case 'success': return 'bg-green-100 border border-green-400 text-green-700';
+                case 'error': return 'bg-red-100 border border-red-400 text-red-700';
+                default: return 'bg-blue-100 border border-blue-400 text-blue-700';
+            }
+        }
+        document.getElementById('herb-name').addEventListener('change', function () {
+            const herbSelect = this;
+            const scientificInput = document.getElementById('scientific-name');
+
+            const herbData = {
+                'Ashwagandha': 'Withania somnifera',
+                'Turmeric': 'Curcuma longa',
+                'Neem': 'Azadirachta indica',
+                'Brahmi': 'Bacopa monnieri',
+                'Tulsi': 'Ocimum sanctum',
+                'Amla': 'Phyllanthus emblica',
+                'Guduchi': 'Tinospora cordifolia',
+                'Haritaki': 'Terminalia chebula',
+                'Bibhitaki': 'Terminalia bellirica',
+                'Amalaki': 'Emblica officinalis',
+                'Shatavari': 'Asparagus racemosus',
+                'Guggul': 'Commiphora wightii',
+                'Arjuna': 'Terminalia arjuna',
+                'Manjistha': 'Rubia cordifolia',
+                'Ashoka': 'Saraca asoca'
+            };
+
+            if (herbSelect.value) {
+                scientificInput.value = herbData[herbSelect.value] || '';
+            } else {
+                scientificInput.value = '';
+            }
+        });
+
+        async function collectHerb() {
+            if (!checkWriteAuth()) return;
+
+            showLoading('collect-btn', 'collect-spinner', true);
+
+            try {
+                if (!isConnected || walletAddress === 'Demo Mode') {
+                    const batchId = Math.floor(Math.random() * 1000) + 1;
+                    showAlert('collect', `✅ Batch created successfully with ID: ${batchId} (Demo Mode)`, 'success');
+                    return;
+                }
+
+                const herbName = document.getElementById('herb-name').value.trim();
+                const scientificName = document.getElementById('scientific-name').value.trim();
+                const location = document.getElementById('collection-location').value.trim();
+                const quantity = parseInt(document.getElementById('quantity').value) || 0;
+
+                if (!herbName || !scientificName || !location || quantity <= 0) {
+                    throw new Error("Please fill in all required fields");
+                }
+
+                const tx = await contract.createBatch(herbName, scientificName, location, quantity, { gasLimit: 400000 });
+                const receipt = await tx.wait();
+
+                let batchId;
+                try {
+                    const batchCreatedEvent = receipt.logs.find(log => {
+                        try {
+                            const parsedLog = contract.interface.parseLog(log);
+                            return parsedLog && parsedLog.name === "BatchCreated";
+                        } catch (e) {
+                            return false;
+                        }
+                    });
+
+                    if (batchCreatedEvent) {
+                        batchId = batchCreatedEvent.args.batchId.toString();
+                    } else {
+                        const nextBatchId = await contract.nextBatchId();
+                        batchId = (nextBatchId - 1).toString();
+                    }
+                } catch (eventError) {
+                    const nextBatchId = await contract.nextBatchId();
+                    batchId = (nextBatchId - 1).toString();
+                }
+
+                showAlert('collect', `✅ Batch created successfully with ID: ${batchId}`, 'success');
+            } catch (error) {
+                console.error("Error in collectHerb:", error);
+                showAlert('collect', `❌ Error: ${error.message || error}`, 'error');
+            } finally {
+                showLoading('collect-btn', 'collect-spinner', false);
+            }
+        }
+
+        async function updateCollectionDetails() {
+            if (!checkWriteAuth()) return;
+
+            showLoading('update-btn', 'update-spinner', true);
+
+            try {
+                if (!isConnected || walletAddress === 'Demo Mode') {
+                    const batchId = Math.floor(Math.random() * 1000) + 1;
+                    showAlert('collect', `✅ Collection details updated for Batch ID: ${batchId} (Demo Mode)`, 'success');
+                    return;
+                }
+
+                const collectResult = document.getElementById('collect-result').textContent;
+                const batchIdMatch = collectResult.match(/Batch created with ID: (\d+)/);
+                const batchId = batchIdMatch ? parseInt(batchIdMatch[1]) : 0;
+                const soilType = document.getElementById('soil-type').value.trim();
+                const weatherConditions = document.getElementById('weather-conditions').value.trim();
+
+                if (!batchId || !soilType || !weatherConditions) {
+                    throw new Error("Please create a batch first and fill in all fields");
+                }
+
+                const tx = await contract.updateCollectionDetails(batchId, soilType, weatherConditions, { gasLimit: 200000 });
+                await tx.wait();
+
+                showAlert('collect', `✅ Collection details updated for Batch ID: ${batchId}`, 'success');
+            } catch (error) {
+                console.error("Error in updateCollectionDetails:", error);
+                showAlert('collect', `❌ Error: ${error.message || error}`, 'error');
+            } finally {
+                showLoading('update-btn', 'update-spinner', false);
+            }
+        }
+
+        async function addProcessing() {
+            if (!checkWriteAuth()) return;
+
+            showLoading('process-btn', 'process-spinner', true);
+
+            try {
+                if (!isConnected || walletAddress === 'Demo Mode') {
+                    const batchId = document.getElementById('process-batch-id').value || '1';
+                    showAlert('process', `✅ Processing added to Batch ID: ${batchId} (Demo Mode)`, 'success');
+                    return;
+                }
+
+                const batchId = parseInt(document.getElementById('process-batch-id').value) || 0;
+                const details = document.getElementById('processing-details-input').value.trim();
+                const equipmentUsed = document.getElementById('equipment-used').value.trim();
+                const complianceHash = document.getElementById('processing-compliance-hash').value.trim();
+
+                if (!batchId || !details) {
+                    throw new Error("Please fill in Batch ID and Processing Details");
+                }
+
+                const tx = await contract.addProcessing(batchId, details, equipmentUsed, complianceHash, { gasLimit: 300000 });
+                await tx.wait();
+
+                showAlert('process', `✅ Processing added to Batch ID: ${batchId}`, 'success');
+            } catch (error) {
+                console.error("Error in addProcessing:", error);
+                showAlert('process', `❌ Error: ${error.message || error}`, 'error');
+            } finally {
+                showLoading('process-btn', 'process-spinner', false);
+            }
+        }
+
+        async function addTesting() {
+            if (!checkWriteAuth()) return;
+
+            showLoading('test-btn', 'test-spinner', true);
+
+            try {
+                if (!isConnected || walletAddress === 'Demo Mode') {
+                    const batchId = document.getElementById('test-batch-id').value || '1';
+                    showAlert('test', `✅ Testing added to Batch ID: ${batchId} (Demo Mode)`, 'success');
+                    return;
+                }
+
+                const batchId = parseInt(document.getElementById('test-batch-id').value) || 0;
+                const results = document.getElementById('testing-results').value.trim();
+                const testLab = document.getElementById('test-lab').value.trim();
+                const testMethod = document.getElementById('test-method').value.trim();
+                const complianceHash = document.getElementById('testing-compliance-hash').value.trim();
+
+                if (!batchId || !results) {
+                    throw new Error("Please fill in Batch ID and Testing Results");
+                }
+
+                const tx = await contract.addTesting(batchId, results, testLab, testMethod, complianceHash, { gasLimit: 300000 });
+                await tx.wait();
+
+                showAlert('test', `✅ Testing added to Batch ID: ${batchId}`, 'success');
+            } catch (error) {
+                console.error("Error in addTesting:", error);
+                showAlert('test', `❌ Error: ${error.message || error}`, 'error');
+            } finally {
+                showLoading('test-btn', 'test-spinner', false);
+            }
+        }
+
+        async function packageBatch() {
+            if (!checkWriteAuth()) return;
+
+            showLoading('package-btn', 'package-spinner', true);
+
+            try {
+                if (!isConnected || walletAddress === 'Demo Mode') {
+                    const batchId = document.getElementById('package-batch-id').value || '1';
+                    const qrHash = '0x' + Math.random().toString(16).substr(2, 64);
+                    showAlert('package', `✅ Batch ${batchId} packaged successfully. QR Code: ${qrHash} (Demo Mode)`, 'success');
+                    currentQRCode = qrHash;
+                    generateQRCode(qrHash);
+                    return;
+                }
+
+                const batchId = parseInt(document.getElementById('package-batch-id').value) || 0;
+                const location = document.getElementById('packaging-location').value.trim();
+                const packageType = document.getElementById('package-type').value.trim();
+                const batchWeight = parseInt(document.getElementById('batch-weight').value) || 0;
+                const complianceHash = document.getElementById('packaging-compliance-hash').value.trim();
+
+                if (!batchId || !location || batchWeight <= 0) {
+                    throw new Error("Please fill in Batch ID, Location, and Batch Weight");
+                }
+
+                const tx = await contract.packageBatch(batchId, location, packageType, batchWeight, complianceHash, { gasLimit: 400000 });
+                await tx.wait();
+
+                const batch = await contract.getBatchJourney(batchId);
+                showAlert('package', `✅ Batch ${batchId} packaged successfully. QR Code: ${batch.packaging.qrCodeHash}`, 'success');
+                currentQRCode = batch.packaging.qrCodeHash;
+                generateQRCode(batch.packaging.qrCodeHash);
+            } catch (error) {
+                console.error("Error in packageBatch:", error);
+                showAlert('package', `❌ Error: ${error.message || error}`, 'error');
+            } finally {
+                showLoading('package-btn', 'package-spinner', false);
+            }
+        }
+
+        function generateQRCode(qrData) {
+            const qrDiv = document.getElementById('qrcode');
+            const canvas = document.getElementById('qr-canvas');
+            const qrText = document.getElementById('qr-code-text');
+
+            qrDiv.classList.remove('hidden');
+            qrText.textContent = qrData;
+
+            QRCode.toCanvas(canvas, qrData, { width: 200, margin: 2 }, (error) => {
+                if (error) {
+                    console.error("QR code generation failed:", error);
+                }
+            });
+        }
+
+        function downloadQR() {
+            const canvas = document.getElementById('qr-canvas');
+            const link = document.createElement('a');
+            link.download = `QR-Code-${currentQRCode}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        async function verifyJourney() {
+            if (!isConnected && !currentUser) {
+                alert("Please connect your wallet or login first!");
+                return;
+            }
+
+            showLoading('verify-btn', 'verify-spinner', true);
+
+            try {
+                const input = document.getElementById('qr-code').value.trim();
+                let batchId;
+
+                if (!input) {
+                    throw new Error("Please provide Batch ID or QR Code Hash");
+                }
+
+                if (!isConnected || walletAddress === 'Demo Mode') {
+                    const sampleBatch = {
+                        batchId: parseInt(input) || 1,
+                        collector: '0x1234567890123456789012345678901234567890',
+                        collection: {
+                            herbName: 'Ashwagandha',
+                            scientificName: 'Withania somnifera',
+                            location: '12.9716:77.5946',
+                            quantity: 50,
+                            soilType: 'Loamy',
+                            weatherConditions: 'Sunny, 25°C',
+                            collectionTime: Math.floor(Date.now() / 1000)
+                        },
+                        processing: {
+                            details: 'Dried at 40°C for 2 hours',
+                            equipmentUsed: 'Convection Dryer',
+                            complianceHash: '0x1234567890abcdef'
+                        },
+                        testing: {
+                            results: 'Purity: 98%, Heavy metals: Within limits',
+                            testLab: 'HerbalLabs Inc.',
+                            testMethod: 'HPLC',
+                            complianceHash: '0xabcdef1234567890'
+                        },
+                        packaging: {
+                            location: '12.9716:77.5946',
+                            packageType: 'Vacuum-sealed',
+                            batchWeight: 45,
+                            complianceHash: '0x9876543210fedcba',
+                            qrCodeHash: '0x' + Math.random().toString(16).substr(2, 64),
+                            packagingTime: Math.floor(Date.now() / 1000)
+                        },
+                        isActive: true
+                    };
+
+                    showAlert('verify', `✅ Batch journey retrieved successfully for Batch ID: ${sampleBatch.batchId} (Demo Mode)`, 'success');
+                    displayBatchJourney(sampleBatch);
+                    initializeMap(sampleBatch);
+                    return;
+                }
+
+                const batchIdNum = parseInt(input);
+                if (!isNaN(batchIdNum) && batchIdNum > 0) {
+                    batchId = batchIdNum;
+                    const nextBatchId = await contract.nextBatchId();
+                    if (batchId >= nextBatchId) {
+                        throw new Error(`Batch ID ${batchId} does not exist`);
+                    }
+                } else {
+                    try {
+                        batchId = await contract.getBatchByQR(input);
+                        if (batchId.toString() === "0") {
+                            throw new Error("QR code hash not found in blockchain");
+                        }
+                    } catch (error) {
+                        throw new Error("Invalid QR code hash. Please check and try again.");
+                    }
+                }
+
+                const batch = await contract.getBatchJourney(batchId);
+
+                showAlert('verify', `✅ Batch journey retrieved successfully for Batch ID: ${batchId}`, 'success');
+                displayBatchJourney(batch);
+                initializeMap(batch);
+            } catch (error) {
+                console.error("Error in verifyJourney:", error);
+                showAlert('verify', `❌ Error: ${error.message || error}`, 'error');
+            } finally {
+                showLoading('verify-btn', 'verify-spinner', false);
+            }
+        }
+
+        function displayBatchJourney(batch) {
+            const journeyDetails = document.getElementById('journey-details');
+            journeyDetails.classList.remove('hidden');
+
+            // Collection Details
+            const collectionDetails = document.getElementById('collection-details');
+            collectionDetails.innerHTML = `
+                <div><strong>Herb Name:</strong> ${batch.collection.herbName || 'Not added'}</div>
+                <div><strong>Scientific Name:</strong> ${batch.collection.scientificName || 'Not added'}</div>
+                <div><strong>Location:</strong> ${batch.collection.location || 'Not added'}</div>
+                <div><strong>Quantity:</strong> ${batch.collection.quantity ? batch.collection.quantity + ' kg' : 'Not added'}</div>
+                <div><strong>Soil Type:</strong> ${batch.collection.soilType || 'Not added'}</div>
+                <div><strong>Weather:</strong> ${batch.collection.weatherConditions || 'Not added'}</div>
+                <div><strong>Collection Time:</strong> ${batch.collection.collectionTime ? new Date(batch.collection.collectionTime * 1000).toLocaleString() : 'Not added'}</div>
+            `;
+
+            // Processing Details
+            const processingDetails = document.getElementById('processing-details');
+            const processing = batch.processing || {};
+            processingDetails.innerHTML = `
+                <div><strong>Details:</strong> ${processing.details || 'Not added'}</div>
+                <div><strong>Equipment:</strong> ${processing.equipmentUsed || 'Not added'}</div>
+                <div><strong>Compliance Hash:</strong> ${processing.complianceHash || 'Not added'}</div>
+            `;
+
+            // Testing Details
+            const testingDetails = document.getElementById('testing-details');
+            const testing = batch.testing || {};
+            testingDetails.innerHTML = `
+                <div><strong>Results:</strong> ${testing.results || 'Not added'}</div>
+                <div><strong>Lab:</strong> ${testing.testLab || 'Not added'}</div>
+                <div><strong>Method:</strong> ${testing.testMethod || 'Not added'}</div>
+                <div><strong>Compliance Hash:</strong> ${testing.complianceHash || 'Not added'}</div>
+            `;
+
+            // Packaging Details
+            const packagingDetails = document.getElementById('packaging-details');
+            const packaging = batch.packaging || {};
+            packagingDetails.innerHTML = `
+                <div><strong>Location:</strong> ${packaging.location || 'Not added'}</div>
+                <div><strong>Package Type:</strong> ${packaging.packageType || 'Not added'}</div>
+                <div><strong>Batch Weight:</strong> ${packaging.batchWeight ? packaging.batchWeight + ' kg' : 'Not added'}</div>
+                <div><strong>Compliance Hash:</strong> ${packaging.complianceHash || 'Not added'}</div>
+                <div><strong>QR Code Hash:</strong> ${packaging.qrCodeHash || 'Not generated'}</div>
+                <div><strong>Packaging Time:</strong> ${packaging.packagingTime ? new Date(packaging.packagingTime * 1000).toLocaleString() : 'Not added'}</div>
+            `;
+
+            displayComplianceDocuments(batch);
+        }
+
+        async function displayComplianceDocuments(batch) {
+            const documentViewers = document.getElementById('document-viewers');
+            documentViewers.innerHTML = '';
+
+            const stages = [
+                { name: 'Processing', hash: batch.processing?.complianceHash, color: 'blue' },
+                { name: 'Testing', hash: batch.testing?.complianceHash, color: 'purple' },
+                { name: 'Packaging', hash: batch.packaging?.complianceHash, color: 'orange' }
+            ];
+
+            for (const stage of stages) {
+                if (stage.hash && stage.hash !== 'Not added' && stage.hash.trim() !== '') {
+                    const ipfsHash = localStorage.getItem(stage.hash) || 'QmXH8goKu2vALYZ8wf2dUMvKgbc1jqE4oqFTuENae2dE4X';
+
+                    if (ipfsHash) {
+                        const pdfUrl = `https://ipfs.io/ipfs/${ipfsHash}`;
+                        const documentCard = document.createElement('div');
+                        documentCard.className = `bg-${stage.color}-50 border border-${stage.color}-200 rounded-lg p-4`;
+                        documentCard.innerHTML = `
+                            <h4 class="font-semibold text-${stage.color}-800 mb-2">${stage.name} Document</h4>
+                            <iframe src="${pdfUrl}#view=FitH" class="w-full h-48 rounded border"></iframe>
+                            <div class="mt-2 flex justify-between items-center">
+                                <span class="text-sm text-${stage.color}-600">Hash: ${stage.hash.slice(0, 10)}...</span>
+                                <button onclick="verifyPDF('${stage.hash}', '${pdfUrl}', '${stage.name}')" class="bg-${stage.color}-600 text-white px-3 py-1 rounded text-sm hover:bg-${stage.color}-700">
+                                    Verify
+                                </button>
+                            </div>
+                        `;
+                        documentViewers.appendChild(documentCard);
+                    } else {
+                        const documentCard = document.createElement('div');
+                        documentCard.className = `bg-gray-50 border border-gray-200 rounded-lg p-4`;
+                        documentCard.innerHTML = `
+                            <h4 class="font-semibold text-gray-800 mb-2">${stage.name} Document</h4>
+                            <div class="bg-gray-100 h-48 rounded border flex items-center justify-center">
+                                <p class="text-gray-500">Document not available on IPFS</p>
+                            </div>
+                            <div class="mt-2">
+                                <span class="text-sm text-gray-600">Hash: ${stage.hash.slice(0, 10)}...</span>
+                            </div>
+                        `;
+                        documentViewers.appendChild(documentCard);
+                    }
+                }
+            }
+        }
+
+        async function verifyPDF(originalHash, pdfUrl, stageName) {
+            try {
+                const response = await fetch(pdfUrl);
+                const arrayBuffer = await response.arrayBuffer();
+                const currentHash = await generateComplianceHash(new File([arrayBuffer], "temp.pdf"));
+
+                const isValid = originalHash === currentHash;
+                const message = `${stageName} document is ${isValid ? '✅ Valid' : '❌ Altered'}\nOriginal Hash: ${originalHash}\nCurrent Hash: ${currentHash}`;
+
+                alert(message);
+            } catch (error) {
+                alert(`Error verifying ${stageName} document: ${error.message}`);
+            }
+        }
+
+        function initializeMap(batch) {
+            const mapContainer = document.getElementById('map-container');
+            const mapDiv = document.getElementById('map');
+
+            let hasValidLocations = false;
+
+            if (batch.collection.location || batch.packaging.location) {
+                mapContainer.classList.remove('hidden');
+                mapDiv.style.display = 'block';
+
+                if (map) {
+                    map.remove();
+                }
+
+                map = L.map('map').setView([0, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                let bounds = [];
+                if (batch.collection.location) {
+                    const [lat, lon] = batch.collection.location.split(':').map(parseFloat);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        collectionMarker = L.marker([lat, lon]).addTo(map)
+                            .bindPopup('<strong>Collection Location</strong>');
+                        bounds.push([lat, lon]);
+                        hasValidLocations = true;
+                    }
+                }
+                if (batch.packaging.location) {
+                    const [lat, lon] = batch.packaging.location.split(':').map(parseFloat);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        packagingMarker = L.marker([lat, lon]).addTo(map)
+                            .bindPopup('<strong>Packaging Location</strong>');
+                        bounds.push([lat, lon]);
+                        hasValidLocations = true;
+                    }
+                }
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds);
+                }
+            }
+
+            if (!hasValidLocations) {
+                mapContainer.classList.add('hidden');
+            }
+        }
+
+        function scanQR() {
+            const scannerContainer = document.getElementById('qr-scanner-container');
+            const video = document.getElementById('qr-scanner');
+
+            scannerContainer.classList.remove('hidden');
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+
+                    qrScannerInterval = setInterval(() => {
+                        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            ctx.drawImage(video, 0, 0);
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = jsQR(imageData.data, imageData.width, imageData.height);
+                            if (code) {
+                                document.getElementById('qr-code').value = code.data;
+                                stopQRScan();
+                                verifyJourney();
+                            }
+                        }
+                    }, 300);
+                })
+                .catch(error => {
+                    alert(`Camera access failed: ${error.message}`);
+                    stopQRScan();
+                });
+        }
+
+        function stopQRScan() {
+            if (qrScannerInterval) {
+                clearInterval(qrScannerInterval);
+                qrScannerInterval = null;
+            }
+
+            const video = document.getElementById('qr-scanner');
+            const scannerContainer = document.getElementById('qr-scanner-container');
+
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+
+            scannerContainer.classList.add('hidden');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+
+            const icons = {
+                success: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+                error: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
+                warning: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+                info: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+            };
+
+            toast.innerHTML = `
+                <div class="toast flex items-center space-x-3 ${colors[type]} text-white">
+                    ${icons[type]}
+                    <span class="flex-1">${message}</span>
+                    <button onclick="this.parentElement.remove()" class="hover:opacity-75">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast.firstElementChild);
+
+            setTimeout(() => {
+                const toastEl = toast.firstElementChild;
+                if (toastEl && toastEl.parentElement) {
+                    toastEl.remove();
+                }
+            }, 3000);
+        }
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            const body = document.body;
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+
+            body.classList.toggle('dark');
+            sunIcon.classList.toggle('hidden');
+            moonIcon.classList.toggle('hidden');
+
+            if (body.classList.contains('dark')) {
+                body.style.background = 'linear-gradient(to bottom right, #1f2937, #111827, #0f172a)';
+                showToast('Dark mode enabled', 'info');
+            } else {
+                body.style.background = '';
+                showToast('Light mode enabled', 'info');
+            }
+        }
+
+        // Copy to Clipboard with Feedback
+        function copyToClipboard(text, buttonElement) {
+            navigator.clipboard.writeText(text).then(() => {
+                if (buttonElement) {
+                    buttonElement.classList.add('copy-success');
+                    const originalText = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>';
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.classList.remove('copy-success');
+                    }, 2000);
+                }
+                showToast('Copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        }
+
+        // Animated Counter
+        function animateCounter(element, target, duration = 1000) {
+            let start = 0;
+            const increment = target / (duration / 16);
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(start);
+                }
+            }, 16);
+        }
+
+        // Add Loading Skeleton
+        function showSkeleton(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="skeleton h-8 w-3/4"></div>
+                        <div class="skeleton h-4 w-full"></div>
+                        <div class="skeleton h-4 w-5/6"></div>
+                        <div class="skeleton h-32 w-full"></div>
+                    </div>
+                `;
+            }
+        }
+
+        function showProgress(percentage, containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+            }
+        }
+
+        function addTooltip(element, text) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'tooltip inline-block';
+            element.parentNode.insertBefore(wrapper, element);
+            wrapper.appendChild(element);
+
+            const tooltip = document.createElement('span');
+            tooltip.className = 'tooltiptext';
+            tooltip.textContent = text;
+            wrapper.appendChild(tooltip);
+        }
+
+        // Confetti Effect
+        function showConfetti() {
+            const duration = 3 * 1000;
+            const animationEnd = Date.now() + duration;
+            const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'];
+
+            (function frame() {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) return;
+
+                const particleCount = 2;
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.style.position = 'fixed';
+                    particle.style.width = '10px';
+                    particle.style.height = '10px';
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = '-10px';
+                    particle.style.borderRadius = '50%';
+                    particle.style.pointerEvents = 'none';
+                    particle.style.zIndex = '9999';
+                    document.body.appendChild(particle);
+
+                    const fall = particle.animate([
+                        { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                        { transform: `translateY(${window.innerHeight + 10}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                    ], {
+                        duration: Math.random() * 2000 + 1000,
+                        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    });
+
+                    fall.onfinish = () => particle.remove();
+                }
+
+                requestAnimationFrame(frame);
+            }());
+        }
+
+        const originalCollectHerb = collectHerb;
+        collectHerb = async function () {
+            showToast('Processing collection...', 'info');
+            try {
+                await originalCollectHerb();
+                showConfetti();
+            } catch (error) {
+                showToast('Collection failed: ' + error.message, 'error');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const hashInputs = document.querySelectorAll('[id$="-compliance-hash"], [id$="-hash"]');
+            hashInputs.forEach(input => {
+                if (input.value && input.parentElement) {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.type = 'button';
+                    copyBtn.className = 'absolute right-2 top-2 text-gray-500 hover:text-gray-700 transition-colors';
+                    copyBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path></svg>';
+                    copyBtn.onclick = () => copyToClipboard(input.value, copyBtn);
+
+                    input.parentElement.style.position = 'relative';
+                    input.parentElement.appendChild(copyBtn);
+                }
+            });
+
+            const connectBtn = document.querySelector('[onclick="connectWallet()"]');
+            if (connectBtn) {
+                addTooltip(connectBtn, 'Connect your Web3 wallet');
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = entry.target;
+                        const value = parseInt(target.textContent) || 0;
+                        animateCounter(target, value);
+                    }
+                });
+            });
+
+            document.querySelectorAll('[id^="total-"], [id^="processed-"], [id^="tested-"], [id^="packaged-"]').forEach(el => {
+                observer.observe(el);
+            });
+
+            const statusDot = document.getElementById('status-dot');
+            if (statusDot) {
+                statusDot.classList.add('pulse-ring');
+            }
+
+            showToast('Welcome to Ayurveda Trace! 🌿', 'success');
+        });
+
+        function toggleFAQ(index) {
+            const content = document.getElementById(`faq-content-${index}`);
+            const icon = document.getElementById(`faq-icon-${index}`);
+
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function updateDashboardStats() {
+            animateCounter(document.getElementById('dashboard-total'), Math.floor(Math.random() * 100) + 50);
+            animateCounter(document.getElementById('dashboard-verified'), Math.floor(Math.random() * 80) + 40);
+            animateCounter(document.getElementById('dashboard-tested'), Math.floor(Math.random() * 60) + 30);
+        }
+
+        setInterval(updateDashboardStats, 10000);
+        updateDashboardStats();
+
+        function toggleFABMenu() {
+            const fabMenu = document.getElementById('fab-menu');
+            const fabIconPlus = document.getElementById('fab-icon-plus');
+            const fabIconClose = document.getElementById('fab-icon-close');
+
+            fabMenu.classList.toggle('hidden');
+            fabIconPlus.classList.toggle('hidden');
+            fabIconClose.classList.toggle('hidden');
+
+            if (!fabMenu.classList.contains('hidden')) {
+                fabMenu.classList.add('fade-in');
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                const button = e.target.tagName === 'BUTTON' ? e.target : e.target.closest('button');
+                button.classList.add('ripple');
+            }
+        });
+    </script>
+</body>
+
+</html>

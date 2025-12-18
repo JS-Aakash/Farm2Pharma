@@ -1,231 +1,348 @@
-# Ayurveda Herbs Traceability - Project Structure
+# 🌿 Farm2Pharma
 
-## Overview
-This application has been refactored from a single monolithic HTML file into a modular, scalable architecture with separated concerns for better maintainability and development.
+### Blockchain-Powered Supply Chain Tracking for Ayurvedic Herbs
 
-## File Structure
+[![Ethereum](https://img.shields.io/badge/Ethereum-Sepolia-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white)](https://sepolia.etherscan.io/)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.19-363636?style=for-the-badge&logo=solidity&logoColor=white)](https://soliditylang.org)
+[![IPFS](https://img.shields.io/badge/IPFS-Pinata-65C2CB?style=for-the-badge&logo=ipfs&logoColor=white)](https://pinata.cloud)
+
+> **Ensuring authenticity and transparency in herbal pharmaceuticals from farm to consumer using blockchain technology.**
+
+---
+
+## 📋 Overview
+
+**Farm2Pharma** is a decentralized application (dApp) that creates an immutable, transparent record of every Ayurvedic herb batch's journey through the supply chain. Built on Ethereum blockchain with GPS tracking, compliance document verification, and QR code authentication, it eliminates counterfeit products and ensures quality.
+
+### Key Features
+
+- ✅ **Complete Traceability**: Track herbs from collection to packaging
+- ✅ **Blockchain Verification**: Immutable records on Ethereum Sepolia testnet
+- ✅ **GPS Integration**: Auto-capture location data at each stage
+- ✅ **Document Hashing**: SHA-256 hashing + IPFS storage for compliance certificates
+- ✅ **QR Code Verification**: Instant consumer verification via smartphone
+- ✅ **Multi-Wallet Support**: MetaMask, WalletConnect, or read-only mode
+- ✅ **Role-Based Access**: Dedicated interfaces for collectors, processors, testers, packagers
+
+---
+
+## 🏗️ Architecture
 
 ```
-public/
-├── index.html                 # Main HTML structure
-├── styles.css                 # All CSS styles and animations
-├── README.md                  # This file
-└── js/
-    ├── config.js              # Configuration constants and app settings
-    ├── contract.js            # Smart contract ABI definitions
-    ├── utils.js               # Utility functions (hashing, IPFS, alerts)
-    ├── ui.js                  # UI management and section navigation
-    ├── auth.js                # Authentication and user management
-    ├── wallet.js              # Wallet connection and blockchain functions
-    ├── supply-chain.js        # Supply chain operations (collect, process, test, package)
-    ├── verification.js        # Product verification and journey display
-    ├── admin.js               # Admin panel and analytics
-    └── main.js                # Application initialization and state management
+┌─────────────────────────────────────────┐
+│         Frontend (Single Page)          │
+│  • HTML5 + Vanilla JavaScript           │
+│  • Tailwind CSS + Leaflet.js            │
+│  • Ethers.js for blockchain interaction │
+└─────────────────────────────────────────┘
+                     ↕
+┌─────────────────────────────────────────┐
+│       Ethereum Blockchain (Sepolia)     │
+│  • Smart Contract: SupplyChainTracker   │
+│  • Stores batch data on-chain           │
+│  • Emits events for tracking            │
+└─────────────────────────────────────────┘
+                     ↕
+┌─────────────────────────────────────────┐
+│           IPFS (Pinata.cloud)           │
+│  • Compliance documents storage         │
+│  • Certificate PDFs                     │
+│  • Document hashes stored on-chain      │
+└─────────────────────────────────────────┘
 ```
 
-## Key Features
+---
 
-### Modular Architecture
-- **Separation of Concerns**: Each file handles a specific aspect of the application
-- **Easy Maintenance**: Find and fix issues faster with organized code
-- **Scalability**: Add new features without affecting existing functionality
-- **Code Reusability**: Functions can be easily reused across different modules
+## 🚀 Quick Start
 
-### File Descriptions
+### Prerequisites
 
-#### `index.html`
-- Main HTML structure and layout
-- Contains all UI sections (menu, collection, processing, testing, packaging, verification, admin)
-- Loads all external dependencies and application scripts in correct order
+- Modern web browser (Chrome, Firefox, or Brave recommended)
+- [MetaMask](https://metamask.io/) browser extension (optional for consumers)
+- A code editor and local web server (e.g., [VS Code Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer))
 
-#### `styles.css`
-- Custom CSS animations (spinner, fade-in, hover effects)
-- Leaflet map customizations
-- Chart container styling
+### Installation
 
-#### `js/config.js`
-- Smart contract address
-- Blockchain network configuration (Sepolia)
-- IPFS/Pinata JWT token
-- Hardcoded user credentials
-- Herb data mappings
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/yourusername/farm2pharma.git
+   cd farm2pharma
+   ```
 
-#### `js/contract.js`
-- Complete smart contract ABI
-- All contract function signatures
-- Input/output type definitions
+2. **Create Configuration File**
+   
+   Create `env.json` in the project root:
+   ```json
+   {
+     "CONTRACT_ADDRESS": "0xYourContractAddressHere",
+     "PINATA_JWT": "your_pinata_jwt_token",
+     "SEPOLIA_CHAIN_ID": "11155111",
+     "RPC_URL": "https://ethereum-sepolia.publicnode.com"
+   }
+   ```
 
-#### `js/utils.js`
-- `generateComplianceHash()` - SHA-256 hash generation
-- `uploadToIPFS()` - IPFS file upload via Pinata
-- `showLoading()` - Button loading state management
-- `showAlert()` - Alert/notification system
-- `getCurrentLocation()` - GPS location detection
+   **How to get these values:**
+   - `CONTRACT_ADDRESS`: Deploy `SmartContracts.sol` to Sepolia testnet using [Remix](https://remix.ethereum.org/)
+   - `PINATA_JWT`: Sign up at [Pinata.cloud](https://pinata.cloud/) and create an API key
+   - `RPC_URL`: Use the provided public node or get your own from [Infura](https://infura.io/) or [Alchemy](https://alchemy.com/)
 
-#### `js/ui.js`
-- `showSection()` - Section navigation
-- `updateButtonStates()` - Dynamic button state management
-- `initializeHerbSelector()` - Herb selection dropdown handler
+3. **Start Local Server**
+   ```bash
+   # If using VS Code Live Server
+   Right-click index.html → Open with Live Server
+   
+   # Or use Python
+   python -m http.server 8000
+   
+   # Or use Node.js
+   npx serve
+   ```
 
-#### `js/auth.js`
-- User authentication (role-based)
-- User management (add, delete, list)
-- Admin authentication
-- Modal management (login/logout)
+4. **Open in Browser**
+   Navigate to `http://localhost:8000` (or your server's URL)
 
-#### `js/wallet.js`
-- MetaMask wallet connection
-- Network switching (Sepolia)
-- Connection status management
-- Demo mode support
-- Account change handlers
+---
 
-#### `js/supply-chain.js`
-- `collectHerb()` - Create new batch
-- `updateCollectionDetails()` - Update collection data
-- `addProcessing()` - Add processing information
-- `addTesting()` - Add testing results
-- `packageBatch()` - Package batch and generate QR
-- QR code generation and download
+## 📱 Usage
 
-#### `js/verification.js`
-- `verifyJourney()` - Verify product by batch ID or QR code
-- `displayBatchJourney()` - Display complete supply chain journey
-- `displayComplianceDocuments()` - Show IPFS documents
-- `verifyPDF()` - Verify document integrity
-- `initializeMap()` - Display locations on interactive map
-- QR scanner functionality
+### For Supply Chain Participants
 
-#### `js/admin.js`
-- `loadAdminData()` - Load analytics data
-- `updateHerbDistributionChart()` - Herb distribution chart
-- `updateSupplyChainProgressChart()` - Supply chain progress chart
-- Statistics calculation
+#### 1️⃣ **Collectors** (Farmers/Harvesters)
+- Click "Collection" from the main menu
+- Login with credentials (default: `collector1` / `collect123`)
+- Fill in herb details (name, quantity, soil type, weather)
+- GPS coordinates are auto-captured
+- Submit transaction to create a new batch on blockchain
 
-#### `js/main.js`
-- Application state management
-- Initialization on page load
-- Event listener setup
-- Global state object (`appState`)
+#### 2️⃣ **Processors** (Manufacturers)
+- Login as processor (`processor1` / `process123`)
+- Enter batch ID and processing details
+- Upload compliance documents (auto-hashed and stored on IPFS)
+- Record processing equipment and methods
 
-## Loading Order
+#### 3️⃣ **Testers** (Quality Labs)
+- Login as tester (`tester1` / `test123`)
+- Submit batch ID and test results
+- Upload quality certificates
+- Mark tests as passed/failed
 
-The scripts must be loaded in this specific order (already configured in index.html):
+#### 4️⃣ **Packagers** (Distribution Centers)
+- Login as packager (`packager1` / `package123`)
+- Enter batch ID and packaging details
+- Generate unique QR code for the batch
+- Download QR code for product labels
 
-1. **External libraries** (loaded in `<head>`)
-   - ethers.js, Leaflet, QRCode, jsQR, PDF.js, Tailwind, Chart.js, WalletConnect
+### For Consumers
 
-2. **Application scripts** (loaded before `</body>`)
-   - config.js (constants)
-   - contract.js (ABI)
-   - utils.js (utilities)
-   - ui.js (UI helpers)
-   - auth.js (authentication)
-   - wallet.js (blockchain connection)
-   - supply-chain.js (core functionality)
-   - verification.js (verification features)
-   - admin.js (admin panel)
-   - main.js (initialization)
+1. **Scan QR Code** on product packaging, or
+2. **Enter Batch ID** manually in the Verification section
+3. **View Complete Journey**: See collection → processing → testing → packaging
+4. **Verify Documents**: Access compliance certificates from IPFS
+5. **Check Locations**: View GPS-tracked supply chain on interactive map
 
-## Global State
+**No wallet needed for verification!** Read-only mode automatically activates.
 
-The `appState` object in `main.js` contains all global application state:
+---
 
-```javascript
-{
-    provider,                    // Ethers.js provider
-    signer,                      // Ethers.js signer
-    contract,                    // Smart contract instance
-    map,                         // Leaflet map instance
-    collectionMarker,            // Collection location marker
-    packagingMarker,             // Packaging location marker
-    video,                       // Video element for QR scanner
-    canvas,                      // Canvas element
-    qrScannerInterval,           // QR scanner interval ID
-    isConnected,                 // Wallet connection status
-    walletAddress,               // Connected wallet address
-    currentQRCode,               // Current QR code
-    currentUser,                 // Logged in user
-    currentRole,                 // User's role
-    herbDistributionChart,       // Chart.js instance
-    supplyChainProgressChart     // Chart.js instance
-}
+## 🔐 Security & Privacy
+
+### Smart Contract Security
+- ✅ Reentrancy protection
+- ✅ Access control modifiers (role-based permissions)
+- ✅ Integer overflow protection (Solidity 0.8+)
+- ✅ Input validation on all functions
+
+### Data Privacy
+- GPS coordinates are public (blockchain transparency)
+- User accounts managed via local storage
+- Private keys never leave user's wallet
+- Document content stored off-chain (IPFS)
+- Only document hashes stored on-chain
+
+### Authentication
+- Multi-tiered wallet support (Desktop & Mobile)
+- Fallback to read-only mode for consumers
+- Demo mode for testing without testnet ETH
+
+---
+
+## 🌐 Deployment
+
+This is a **static website** that can be hosted on any platform:
+
+### Option 1: Vercel (Recommended)
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel --prod
 ```
 
-## Default Users
+### Option 2: Netlify
+```bash
+# Drag and drop the folder to netlify.com, or use CLI
+netlify deploy --prod --dir .
+```
 
-The application includes hardcoded users for testing:
+### Option 3: GitHub Pages
+1. Push code to GitHub repository
+2. Go to Settings → Pages
+3. Select branch and `/` (root) folder
+4. Click Save
 
-| Username     | Password    | Role      |
-|-------------|-------------|-----------|
-| admin       | admin123    | admin     |
-| collector1  | collect123  | collector |
-| processor1  | process123  | processor |
-| tester1     | test123     | tester    |
-| packager1   | package123  | packager  |
+**Important**: Ensure `env.json` is uploaded with your deployment!
 
-## Features
+---
 
-### Supply Chain Tracking
-- **Collection**: Record herb collection with GPS coordinates
-- **Processing**: Document processing methods and equipment
-- **Testing**: Laboratory testing results and certificates
-- **Packaging**: Generate unique QR codes for products
+## 📂 Project Structure
 
-### Verification
-- Scan QR codes or enter batch IDs
-- View complete supply chain journey
-- Interactive map showing collection and packaging locations
-- Verify compliance documents on IPFS
+```
+Farm2Pharma/
+├── index.html              # Main application (single-page dApp)
+├── documentation.html      # User guide and technical docs
+├── SmartContracts.sol      # Ethereum smart contract source
+├── env.json                # Configuration (⚠️ add to .gitignore)
+├── .gitignore              # Git ignore file
+├── README.md               # This file
+└── Images/                 # Asset directory
+```
 
-### Admin Panel
-- View total batches across all stages
-- Herb distribution analytics (doughnut chart)
-- Supply chain progress analytics (bar chart)
-- User management
+---
 
-### Blockchain Integration
-- Ethereum Sepolia testnet
-- MetaMask wallet support
-- Smart contract interaction
-- Demo mode for testing without wallet
+## 🛠️ Technology Stack
 
-## Development
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | HTML5, Vanilla JavaScript, Tailwind CSS |
+| **Blockchain** | Ethereum Sepolia, Solidity 0.8.19, Ethers.js |
+| **Storage** | IPFS via Pinata API |
+| **Maps** | Leaflet.js with OpenStreetMap |
+| **QR Codes** | QRCode.js library |
+| **Wallet** | MetaMask, WalletConnect |
 
-### Adding New Features
+---
 
-1. **New Supply Chain Stage**:
-   - Add HTML section in `index.html`
-   - Create function in `supply-chain.js`
-   - Update contract ABI in `contract.js`
+## 📖 Smart Contract Functions
 
-2. **New Admin Chart**:
-   - Add canvas element in admin section
-   - Create chart function in `admin.js`
-   - Call from `loadAdminData()`
+### Core Functions (from `SmartContracts.sol`)
 
-3. **New User Role**:
-   - Add to `HARDCODED_USERS` in `config.js`
-   - Create section in `index.html`
-   - Add authentication logic in `auth.js`
+```solidity
+// Create a new batch
+function createBatch(
+    string herbName,
+    string scientificName, 
+    string location,
+    uint256 quantity
+) returns (uint256 batchId)
 
-### Testing
+// Add processing information
+function addProcessing(
+    uint256 batchId,
+    string details,
+    string equipmentUsed,
+    string complianceHash
+)
 
-- Use demo mode without MetaMask connection
-- Test all supply chain stages with demo data
-- Verify QR code generation and scanning
-- Check admin analytics with sample data
+// Record testing results
+function addTesting(
+    uint256 batchId,
+    string results,
+    string testLab,
+    string testMethod,
+    string complianceHash
+)
 
-## Notes
+// Package batch and generate QR
+function packageBatch(
+    uint256 batchId,
+    string location,
+    string packageType,
+    uint256 batchWeight,
+    string complianceHash
+)
 
-- All functionality remains exactly the same as the original monolithic file
-- No breaking changes to user experience
-- Improved code organization for better maintainability
-- Better separation of concerns following best practices
-- Easier debugging and testing with modular structure
+// Verify product journey (public view function)
+function getBatchJourney(uint256 batchId)
+    returns (BatchDetails)
+```
 
-## Browser Compatibility
+---
 
-- Modern browsers with ES6 support
-- MetaMask extension recommended
-- Mobile browsers with camera access for QR scanning
+## 🧪 Testing
+
+### Local Testing with Demo Mode
+The application includes a demo mode for testing without blockchain:
+- No wallet required
+- Simulated batch IDs
+- Full UI/UX testing
+
+### Testnet Testing
+1. Get Sepolia ETH from [faucet](https://sepoliafaucet.com/)
+2. Connect MetaMask to Sepolia network
+3. Perform real blockchain transactions
+
+---
+
+## 🐛 Troubleshooting
+
+### "Demo Mode" appears on desktop
+- Ensure `env.json` is properly loaded (check browser console)
+- Verify MetaMask is on Sepolia network
+- Check that `CONTRACT_ADDRESS` is correct
+
+### "Read-Only Mode" on mobile
+- Expected behavior if wallet isn't connected
+- Verification still works perfectly
+- For write operations, use WalletConnect
+
+### QR Scanner not working
+- Allow camera permissions in browser
+- Use HTTPS (required for camera access)
+- Fallback: manually enter batch ID
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -m 'Add YourFeature'`)
+4. Push to the branch (`git push origin feature/YourFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👥 Team
+
+**Developed by**: Aakash JS
+
+**Contact**: [jsaakash22@gmail.com]
+
+**Project Link**: [https://github.com/JS-Aakash/Farm2Pharma](https://github.com/JS-Aakash/Farm2Pharma)
+
+---
+
+## 🙏 Acknowledgments
+
+- Ethereum Foundation for blockchain infrastructure
+- Pinata for decentralized storage
+- OpenStreetMap contributors for mapping data
+- Tailwind CSS for styling framework
+
+---
+
+<div align="center">
+
+**[Live Demo](#) • [Documentation](documentation.html) • [Report Bug](#) • [Request Feature](#)**
+
+Made with 💚 for transparent herbal supply chains
+
+</div>

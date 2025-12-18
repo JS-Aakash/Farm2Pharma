@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayurveda Trace Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-sm border-b border-green-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Ayurveda Trace</h1>
+                        <p class="text-sm text-gray-600">Documentation</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html"
+                        class="flex items-center space-x-2 bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span class="font-medium">Back to App</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center mb-12 fade-in">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Documentation</h1>
+            <p class="text-xl text-gray-600">Complete guide to using the Ayurveda Traceability Platform</p>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 fade-in">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Table of Contents</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <a href="#overview"
+                    class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <span class="font-medium text-gray-900">Platform Overview</span>
+                </a>
+                <a href="#getting-started"
+                    class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <span class="font-medium text-gray-900">Getting Started</span>
+                </a>
+                <a href="#roles" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <span class="font-medium text-gray-900">User Roles</span>
+                </a>
+                <a href="#workflow"
+                    class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <span class="font-medium text-gray-900">Workflow Process</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Platform Overview -->
+        <section id="overview" class="mb-12 fade-in">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Platform Overview</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">What is Ayurveda Trace?</h3>
+                        <p class="text-gray-600 mb-4">
+                            Ayurveda Trace is a blockchain-powered platform that ensures complete transparency and
+                            traceability
+                            in the Ayurvedic herb supply chain. From harvest to final product, every step is recorded on
+                            an
+                            immutable blockchain ledger.
+                        </p>
+                        <p class="text-gray-600 mb-4">
+                            Our platform connects all stakeholders in the supply chain - from herb collectors to final
+                            packagers - creating a trusted ecosystem where quality and authenticity are guaranteed.
+                        </p>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-green-900  mb-2">Key Benefits</h4>
+                            <ul class="text-green-800 space-y-1">
+                                <li>• Complete supply chain transparency</li>
+                                <li>• Immutable quality records</li>
+                                <li>• Authentic product verification</li>
+                                <li>• Regulatory compliance</li>
+                                <li>• Consumer trust building</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-6">
+                        <img src="Images/role.jpg" alt="Platform Overview" class="w-full rounded-lg shadow-md mb-4">
+                        <div class="text-center">
+                            <h4 class="font-semibold text-gray-900 mb-2">Supply Chain Visualization</h4>
+                            <p class="text-sm text-gray-600">
+                                Track herbs from collection to final packaging with complete transparency
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Getting Started -->
+        <section id="getting-started" class="mb-12 fade-in">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Getting Started</h2>
+                <div class="space-y-8">
+                    <div class="border-l-4 border-blue-500 pl-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Step 1: Connect Your Wallet</h3>
+                        <p class="text-gray-600 mb-4">
+                            To interact with the blockchain, you need to connect a compatible wallet like MetaMask.
+                        </p>
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <h4 class="font-semibold text-gray-900 mb-2">Wallet Connection Process</h4>
+                            <ol class="text-gray-600 space-y-2">
+                                <li class="flex items-start">
+                                    <span
+                                        class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">1</span>
+                                    Install MetaMask browser extension
+                                </li>
+                                <li class="flex items-start">
+                                    <span
+                                        class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">2</span>
+                                    Click "Connect Wallet" button in the header
+                                </li>
+                                <li class="flex items-start">
+                                    <span
+                                        class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">3</span>
+                                    Approve the connection request in MetaMask
+                                </li>
+                                <li class="flex items-start">
+                                    <span
+                                        class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3 mt-0.5">4</span>
+                                    Verify connection status in the header
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="border-l-4 border-green-500 pl-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Step 2: Choose Your Role</h3>
+                        <p class="text-gray-600 mb-4">
+                            Select your role in the supply chain to access relevant features and functions.
+                        </p>
+                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-green-900 mb-2">Available Roles</h4>
+                                <ul class="text-green-800 space-y-1 text-sm">
+                                    <li>• <strong>Collector:</strong> Gathers raw herbs</li>
+                                    <li>• <strong>Processor:</strong> Processes raw materials</li>
+                                    <li>• <strong>Tester:</strong> Quality control testing</li>
+                                    <li>• <strong>Packager:</strong> Final product packaging</li>
+                                    <li>• <strong>Admin:</strong> System management</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 class="font-semibold text-blue-900 mb-2">Demo Mode</h4>
+                                <p class="text-blue-800 text-sm">
+                                    Don't have a wallet? Use demo mode to explore the platform without blockchain
+                                    connection.
+                                </p>
+                            </div>
+                        </div>
+                        <img src="Images/App.jpg" alt="Role Selection" class="w-full rounded-lg shadow-md">
+                    </div>
+
+                    <div class="border-l-4 border-purple-500 pl-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Step 3: Start Using the Platform</h3>
+                        <p class="text-gray-600 mb-4">
+                            Once connected and authenticated, you can access all features relevant to your role.
+                        </p>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-purple-900 mb-2">Quick Actions</h4>
+                            <div class="grid md:grid-cols-3 gap-3">
+                                <div class="bg-white rounded-lg p-3 text-center">
+                                    <svg class="w-8 h-8 text-purple-600 mx-auto mb-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-900">Add New Batch</span>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 text-center">
+                                    <svg class="w-8 h-8 text-purple-600 mx-auto mb-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-900">Track Products</span>
+                                </div>
+                                <div class="bg-white rounded-lg p-3 text-center">
+                                    <svg class="w-8 h-8 text-purple-600 mx-auto mb-2" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span class="text-sm font-medium text-gray-900">View Reports</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Roles -->
+        <section id="roles" class="mb-12 fade-in">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">User Roles & Responsibilities</h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="border border-green-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Collector</h3>
+                        <p class="text-gray-600 mb-4">
+                            Responsible for gathering raw herbs from natural sources and recording initial collection
+                            data.
+                        </p>
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-900">Key Functions:</h4>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Record herb collection location</li>
+                                <li>• Document collection time and date</li>
+                                <li>• Upload photos of collected herbs</li>
+                                <li>• Generate initial batch QR codes</li>
+                                <li>• Ensure sustainable harvesting practices</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="border border-blue-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Processor</h3>
+                        <p class="text-gray-600 mb-4">
+                            Handles the initial processing and preparation of raw herbs for further manufacturing.
+                        </p>
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-900">Key Functions:</h4>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Clean and sort raw herbs</li>
+                                <li>• Record processing methods</li>
+                                <li>• Document processing parameters</li>
+                                <li>• Update batch status on blockchain</li>
+                                <li>• Maintain quality standards</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="border border-purple-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Tester</h3>
+                        <p class="text-gray-600 mb-4">
+                            Conducts quality control testing and analysis to ensure herb purity and potency.
+                        </p>
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-900">Key Functions:</h4>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Perform quality analysis tests</li>
+                                <li>• Document test results</li>
+                                <li>• Verify herb authenticity</li>
+                                <li>• Upload lab reports and certificates</li>
+                                <li>• Ensure compliance with standards</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="border border-orange-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Packager</h3>
+                        <p class="text-gray-600 mb-4">
+                            Responsible for final product packaging and preparing for distribution to consumers.
+                        </p>
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-900">Key Functions:</h4>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Package final products</li>
+                                <li>• Generate product QR codes</li>
+                                <li>• Record packaging details</li>
+                                <li>• Update final product status</li>
+                                <li>• Ensure proper labeling</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="border border-red-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-3">Admin</h3>
+                        <p class="text-gray-600 mb-4">
+                            Manages the overall system, user accounts, and ensures platform integrity.
+                        </p>
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-900">Key Functions:</h4>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Manage user accounts and roles</li>
+                                <li>• Monitor system performance</li>
+                                <li>• Generate system reports</li>
+                                <li>• Handle dispute resolution</li>
+                                <li>• Ensure data integrity</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow Process -->
+        <section id="workflow" class="mb-12 fade-in">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Workflow Process</h2>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Complete Supply Chain Journey</h3>
+                    <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 mb-6">
+                        <img src="https://via.placeholder.com/800x400/059669/ffffff?text=Complete+Supply+Chain+Workflow"
+                            alt="Supply Chain Workflow" class="w-full rounded-lg shadow-md mb-4">
+                        <p class="text-center text-gray-600">
+                            The complete journey of Ayurvedic herbs from collection to final consumer
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <div
+                            class="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                            1</div>
+                        <div class="flex-1">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Herb Collection</h4>
+                            <p class="text-gray-600 mb-3">
+                                Collectors gather herbs from natural sources, recording GPS coordinates, time, and
+                                environmental conditions.
+                            </p>
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <h5 class="font-medium text-green-900 mb-2">Collection Activities:</h5>
+                                <ul class="text-green-800 text-sm space-y-1">
+                                    <li>• GPS location tagging</li>
+                                    <li>• Photo documentation</li>
+                                    <li>• Quantity and quality assessment</li>
+                                    <li>• Sustainable harvesting verification</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div
+                            class="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                            2</div>
+                        <div class="flex-1">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Processing & Cleaning</h4>
+                            <p class="text-gray-600 mb-3">
+                                Processors clean, sort, and prepare raw herbs according to traditional Ayurvedic
+                                methods.
+                            </p>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h5 class="font-medium text-blue-900 mb-2">Processing Steps:</h5>
+                                <ul class="text-blue-800 text-sm space-y-1">
+                                    <li>• Cleaning and washing</li>
+                                    <li>• Drying and curing</li>
+                                    <li>• Sorting by quality</li>
+                                    <li>• Recording processing parameters</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div
+                            class="w-10 h-10 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                            3</div>
+                        <div class="flex-1">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Quality Testing</h4>
+                            <p class="text-gray-600 mb-3">
+                                Testers conduct comprehensive quality analysis to ensure herb purity and potency.
+                            </p>
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <h5 class="font-medium text-purple-900 mb-2">Testing Procedures:</h5>
+                                <ul class="text-purple-800 text-sm space-y-1">
+                                    <li>• Chemical composition analysis</li>
+                                    <li>• Contaminant testing</li>
+                                    <li>• Potency verification</li>
+                                    <li>• Authenticity confirmation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div
+                            class="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">
+                            4</div>
+                        <div class="flex-1">
+                            <h4 class="text-lg font-semibold text-gray-900 mb-2">Final Packaging</h4>
+                            <p class="text-gray-600 mb-3">
+                                Packers prepare final products with proper labeling and QR codes for consumer
+                                verification.
+                            </p>
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                <h5 class="font-medium text-orange-900 mb-2">Packaging Process:</h5>
+                                <ul class="text-orange-800 text-sm space-y-1">
+                                    <li>• Product packaging</li>
+                                    <li>• QR code generation</li>
+                                    <li>• Label verification</li>
+                                    <li>• Final quality check</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gray-50 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">Blockchain Integration</h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-medium text-gray-900 mb-2">Immutable Records</h5>
+                            <p class="text-gray-600 text-sm">
+                                Every step in the supply chain is recorded on the blockchain, creating an immutable
+                                audit trail that cannot be altered or tampered with.
+                            </p>
+                        </div>
+                        <div>
+                            <h5 class="font-medium text-gray-900 mb-2">Smart Contracts</h5>
+                            <p class="text-gray-600 text-sm">
+                                Automated smart contracts ensure that all quality standards and regulatory
+                                requirements are met before products can move to the next stage.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visual Guide -->
+        <section class="mb-12 fade-in">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Visual Guide</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Interface Overview</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <img src="Images/App.jpg" alt="Main Dashboard" class="w-full rounded-lg shadow-md mb-3">
+                                <h4 class="font-medium text-gray-900">Main Dashboard</h4>
+                                <p class="text-sm text-gray-600">
+                                    Central hub for accessing all platform features and monitoring supply chain
+                                    activities.
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <img src="Images/verify.jpg" alt="Batch Tracking"
+                                    class="w-full rounded-lg shadow-md mb-3">
+                                <h4 class="font-medium text-gray-900">Batch Tracking</h4>
+                                <p class="text-sm text-gray-600">
+                                    Real-time tracking of herb batches through the entire supply chain process.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">Key Features</h3>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <img src="Images/scan.jpg" alt="QR Scanning" class="w-full rounded-lg shadow-md mb-3">
+                                <h4 class="font-medium text-gray-900">QR Code Scanning</h4>
+                                <p class="text-sm text-gray-600">
+                                    Scan QR codes to instantly access complete product history and verification.
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <img src="Images/analysis.jpg" alt="Analytics Dashboard"
+                                    class="w-full rounded-lg shadow-md mb-3">
+                                <h4 class="font-medium text-gray-900">Analytics Dashboard</h4>
+                                <p class="text-sm text-gray-600">
+                                    Comprehensive analytics and reporting for supply chain insights and performance.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="mb-12 fade-in">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+                <div class="space-y-6">
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">How do I connect my wallet?</h3>
+                        <p class="text-gray-600">
+                            Click the "Connect Wallet" button in the header, install MetaMask if you haven't already,
+                            and approve the connection request. Your wallet address will appear in the header once
+                            connected.
+                        </p>
+                    </div>
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Can I use the platform without a wallet?
+                        </h3>
+                        <p class="text-gray-600">
+                            Yes! Use the demo mode to explore all features without connecting a wallet. Demo mode
+                            provides
+                            sample data to demonstrate the platform's capabilities.
+                        </p>
+                    </div>
+                    <div class="border-b border-gray-200 pb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">How secure is my data?</h3>
+                        <p class="text-gray-600">
+                            All data is stored on the blockchain, making it immutable and tamper-proof. Your personal
+                            information is encrypted and only accessible to authorized parties.
+                        </p>
+                    </div>
+                    <div class="pb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">How do I verify product authenticity?</h3>
+                        <p class="text-gray-600">
+                            Simply scan the QR code on any Ayurveda Trace product using our platform or any QR scanner.
+                            You'll see the complete journey of the product from collection to packaging.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Back to Top -->
+        <div class="text-center mb-8">
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+                class="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+                Back to Top
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <p class="text-gray-600">© 2025 . Powered by blockchain technology for authentic Ayurvedic
+                    products.</p>
+                <p class="text-sm text-gray-500 mt-2">Ensuring transparency, quality, and sustainability in traditional
+                    medicine supply chains.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for animations -->
+    <script>
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all fade-in elements
+        document.addEventListener('DOMContentLoaded', () => {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+
+</html>
